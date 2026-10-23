@@ -1,0 +1,31 @@
+name: Weekly price update
+
+on:
+  schedule:
+    - cron: '0 3 * * 0'   # every Sunday 03:00 UTC (04:00 in Morocco)
+  workflow_dispatch:       # "Run workflow" button for a manual run
+
+permissions:
+  contents: write
+
+jobs:
+  fit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Fit and test new prices
+        run: node server/fit.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+      - name: Publish the new price file
+        run: |
+          git add server/prices.json server/history
+          if git diff --cached --quiet; then echo "No new prices this week"; exit 0; fi
+          git config user.name "price-bot"
+          git config user.email "price-bot@users.noreply.github.com"
+          git commit -m "Weekly prices v$(node -p "require('./server/prices.json').version")"
+          git push
