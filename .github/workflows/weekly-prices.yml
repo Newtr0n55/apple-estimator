@@ -23,7 +23,7 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
       - name: Publish the new price file
         run: |
-          git add server/prices.json server/history
+          git add server/   # history/ only exists after the first update
           if git diff --cached --quiet; then echo "No new prices this week"; exit 0; fi
           git config user.name "price-bot"
           git config user.email "price-bot@users.noreply.github.com"
