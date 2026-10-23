@@ -4,3 +4,4 @@ www/
 # NEVER publish the signing key: anyone with it could ship fake updates of your app
 *.keystore
 *.idsig
+.claude/

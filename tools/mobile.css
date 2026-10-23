@@ -59,3 +59,9 @@ html.locked,html.locked body{overflow:hidden}
   .sl{font-size:14px}
   .sl input{min-height:42px;width:84px}
 }
+/* new APK available */
+.updbar{margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:var(--accent);color:var(--on-accent);border-radius:12px;padding:10px 12px}
+.updbar span{flex:1 1 180px;font-weight:600}
+.updbar .btn{min-height:40px;text-decoration:none;display:inline-flex;align-items:center}
+.updbar .btn.pri{background:var(--on-accent);color:var(--accent);border-color:var(--on-accent)}
+.updbar .btn:not(.pri){border-color:var(--on-accent);color:var(--on-accent)}

@@ -56,9 +56,30 @@ Rebuild (see README.md) and install the new APK. Because it's signed with the sa
 
 Check: open the app, answer **Yes** to "Share my purchases and sales", and record a test deal. In Supabase → Table Editor → `records`, the row appears within seconds. Then delete it from the app with *Data sharing → Delete my data*, and it disappears.
 
-## Step 4 — Share the APK
+## Step 4 — Download page and web version (GitHub Pages)
 
-Send `dist/UsedAppleEstimator.apk` by WhatsApp or Telegram, or put it on Google Drive. People install it with *Install unknown apps* allowed.
+One-time: in the repo go to **Settings → Pages**. Under *Build and deployment*, set Source to **Deploy from a branch**, Branch to **main**, folder **/docs**, then **Save**.
+After about a minute you have:
+
+- **https://newtr0n55.github.io/apple-estimator/**: the download page (EN/FR/Darija, QR code, install steps). Share this link.
+- **https://newtr0n55.github.io/apple-estimator/app/**: the web version for iPhone and computers. It can be added to the home screen and works offline after the first visit.
+- `docs/qr.png`: a printable QR code of the download page.
+
+The download button always gives the newest APK:
+`https://github.com/Newtr0n55/apple-estimator/releases/latest/download/UsedAppleEstimator.apk`
+
+## Releasing a new version
+
+1. Raise `android:versionCode` (+1) and `android:versionName` in `src/AndroidManifest.xml`.
+2. Run `build.sh`. It builds the APK, the web version and `docs/version.json`.
+3. Commit and push, then tag and push the tag:
+
+       git tag v1.3
+       git push origin v1.3
+
+   The **Release APK** workflow publishes the APK as a GitHub Release. The web version updates as soon as the push lands.
+4. Android users who allowed price updates see "New version available → Download" the next time they open the app.
+
 For the Play Store later, you'd need a $25 developer account and a few extra changes (an `.aab` file and a newer Android target).
 
 ---

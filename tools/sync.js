@@ -1,6 +1,7 @@
 /* ---------- consent, deals, uploads and price updates ---------- */
 (function(){
   const CFG = window.APP_CONFIG || {};
+  const BUILD = window.APP_BUILD || {code:0, name:''};
   const API = (CFG.supabaseUrl || '').replace(/\/+$/, '');
   const QUESTIONS = [
     ['asks', 'Share the prices I check', 'When you type a seller\'s asking price, that price and the device details are sent anonymously to improve the estimates.'],
@@ -52,6 +53,28 @@
     renderData();
   }
 
+  /* ---------- newer APK notice (Android only; the web version is always current) ---------- */
+  let newer = null;
+  async function checkAppVersion(){
+    if(!window.AndroidApp || !CFG.versionUrl) return;
+    try{
+      const v = await (await fetch(CFG.versionUrl + '?t=' + Date.now(), {cache:'no-store'})).json();
+      if(v && v.versionCode > BUILD.code && v.apk && /^https:\/\//.test(v.apk)) newer = v;
+    }catch(e){}
+    renderUpdate();
+  }
+  function renderUpdate(){
+    const bar = $('updateBar');
+    if(!newer || get('upd-dismiss', 0) >= newer.versionCode){ bar.hidden = true; return; }
+    bar.hidden = false;
+    bar.innerHTML = '<span>' + esc(t('New version {v} is available.', {v:newer.versionName})) + '</span>' +
+      '<a class="btn pri" href="' + esc(newer.apk) + '">' + t('Download') + '</a>' +
+      '<button class="btn" type="button" id="updLater">' + t('Later') + '</button>';
+  }
+  $('updateBar').addEventListener('click', e => {
+    if(e.target.id === 'updLater'){ put('upd-dismiss', newer.versionCode); renderUpdate(); }
+  });
+
   /* ---------- personal adjustment (learned from this phone's own deals) ---------- */
   function personal(){
     const d = get('deals', []).filter(x => x.estimate > 0 && x.price > 0);
@@ -86,7 +109,7 @@
       faults:Object.keys(S.funcs).filter(k => S.funcs[k] && funcVisible(k)), warranty:S.warranty,
       extras:Object.keys(S.acc).filter(k => S.acc[k] && accVisible(k)),
       base_used:Math.round(Number(S.base) || 0), base_default:m.base, total:Math.round(r.raw), estimate:r.rawHeadline,
-      prices_version:pricesVersion(), app_version:CFG.appVersion || '', lang:LANG};
+      prices_version:pricesVersion(), app_version:BUILD.name + (window.AndroidApp ? '' : '-web'), lang:LANG};
   }
   const label = m => t(m.name) + (m.custom || !S.storage ? '' : ' ' + gbLabel(S.storage));
   function enqueue(rec){
@@ -182,7 +205,7 @@
     if(lb){ applyLang(lb.dataset.lang); try{ localStorage.setItem('used-apple-lang', lb.dataset.lang); }catch(err){} return; }
     if(e.target.id === 'obGo'){
       consent = Object.assign({}, draft, {at:new Date().toISOString()}); put('consent', consent);
-      renderAll(); flush(); if(on('updates')) checkPrices(false);
+      renderAll(); flush(); if(on('updates')){ checkPrices(false); checkAppVersion(); }
     }
   });
   $('onboard').addEventListener('change', e => {
@@ -276,7 +299,7 @@
     }
   });
 
-  function renderAll(){ renderOnboard(); renderDeal(); renderPrompt(); renderData(); }
+  function renderAll(){ renderOnboard(); renderDeal(); renderPrompt(); renderData(); renderUpdate(); }
 
   /* hooks into the page script */
   const baseRender = render;
@@ -296,5 +319,5 @@
   if(cached) applyPrices(cached);
   refreshBase(prev);
   renderAll();
-  if(consent){ flush(); if(on('updates')) checkPrices(false); }
+  if(consent){ flush(); if(on('updates')){ checkPrices(false); checkAppVersion(); } }
 })();

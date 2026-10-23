@@ -1,0 +1,28 @@
+name: Release APK
+
+# Push a tag like v1.2 and this publishes dist/UsedAppleEstimator.apk as a GitHub Release.
+# The download link .../releases/latest/download/UsedAppleEstimator.apk then points to it.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check the APK matches the tag
+        run: |
+          name=$(sed -n 's/.*android:versionName="\([^"]*\)".*/\1/p' src/AndroidManifest.xml)
+          [ "v$name" = "$GITHUB_REF_NAME" ] || { echo "Tag $GITHUB_REF_NAME but manifest says $name"; exit 1; }
+          test -f dist/UsedAppleEstimator.apk
+      - name: Publish
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/UsedAppleEstimator.apk \
+            --title "Apple Estimator $GITHUB_REF_NAME" \
+            --notes "Android 8 or newer. Install steps in English, French and Darija: https://newtr0n55.github.io/apple-estimator/"
+        env:
+          GH_TOKEN: ${{ github.token }}

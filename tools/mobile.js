@@ -13,6 +13,10 @@
       setTimeout(() => copyBtn.textContent = t('Copy summary'), 1600);
     }, true);
     shareBtn.addEventListener('click', () => app.share(summaryText()));
+  } else if(navigator.share){
+    // web version on a phone: use the browser's own share sheet
+    shareBtn.hidden = false;
+    shareBtn.addEventListener('click', () => navigator.share({text:summaryText()}).catch(() => {}));
   }
 
   // Hide the floating price bar while the receipt itself is on screen

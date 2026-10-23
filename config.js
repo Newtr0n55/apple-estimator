@@ -9,5 +9,6 @@ window.APP_CONFIG = {
   // Public address of the weekly price file, e.g.
   // 'https://raw.githubusercontent.com/YOUR-NAME/apple-estimator/main/server/prices.json'
   pricesUrl: 'https://raw.githubusercontent.com/Newtr0n55/apple-estimator/main/server/prices.json',
-  appVersion: '1.1'
+  // where the app checks for a newer APK (written by tools/make-web.js)
+  versionUrl: 'https://raw.githubusercontent.com/Newtr0n55/apple-estimator/main/docs/version.json'
 };

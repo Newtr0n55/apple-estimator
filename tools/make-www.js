@@ -73,14 +73,17 @@ function buildPage() {
     '<button class="btn pri" id="copyBtn" type="button">Copy summary</button>\n          <button class="btn" id="shareBtn" type="button" hidden>Share</button>');
   // containers filled by sync.js: deal box, reminder card, Data sharing panel, first-launch screen
   html = swap(html, '<textarea class="copybox"', '<div class="deal" id="dealBox"></div>\n        <textarea class="copybox"');
-  html = swap(html, '<div class="app">', '<div class="prompt" id="askPrompt" role="status" hidden></div>\n\n  <div class="app">');
+  html = swap(html, '<div class="app">', '<div class="updbar" id="updateBar" role="status" hidden></div>\n  <div class="prompt" id="askPrompt" role="status" hidden></div>\n\n  <div class="app">');
   html = swap(html, '</details>', '</details>\n\n  <details class="set" id="dataSet"><summary>Data sharing</summary><div class="setbody" id="dataBody"></div></details>');
   html = swap(html, '<script>window.TR = {fr:{}, ar:{}};</script>', '<div class="onboard" id="onboard" hidden></div>\n\n<script>window.TR = {fr:{}, ar:{}};</script>');
   html = swap(html, '>العربية</button>', '>الدارجة</button>');
   // Darija and new-string translations go in after the page's own TR scripts, before the main script
   html = swap(html, '<script>\n/* ---------- data ---------- */', translationsScript(html) + '<script>\n/* ---------- data ---------- */');
+  const manifest = fs.readFileSync(path.join(root, 'src', 'AndroidManifest.xml'), 'utf8');
+  const build = { code: Number(manifest.match(/android:versionCode="(\d+)"/)[1]), name: manifest.match(/android:versionName="([^"]+)"/)[1] };
   const head = '<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n' +
-    '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n';
+    '<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">\n' +
+    '<script>window.APP_BUILD = ' + JSON.stringify(build) + ';</script>\n';
   // <title> and the font link come before the page's <style>, so <body> starts there
   html = head + html.replace('<style>', '</head>\n<body>\n<style>') +
     '\n<script>\n' + MOBILE_JS + '\n</script>\n<script src="config.js"></script>\n<script>\n' + SYNC_JS + '\n</script>\n</body>\n</html>\n';

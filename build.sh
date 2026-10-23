@@ -11,8 +11,12 @@ J="$JAVA_HOME/bin"
 EXE=""; case "$(uname -s)" in MINGW*|MSYS*|CYGWIN*) EXE=".exe";; esac
 BAT=""; [ -n "$EXE" ] && BAT=".bat"
 
-node tools/make-www.js "${SOURCE_HTML:-page/used-apple-estimator.html}"
+# version numbers live only in src/AndroidManifest.xml
+VCODE=$(sed -n 's/.*android:versionCode="\([0-9]*\)".*/\1/p' src/AndroidManifest.xml)
+VNAME=$(sed -n 's/.*android:versionName="\([^"]*\)".*/\1/p' src/AndroidManifest.xml)
 
+node tools/make-www.js "${SOURCE_HTML:-page/used-apple-estimator.html}"
+node tools/make-web.js   # web version + download page in docs/, served by GitHub Pages
 
 B=build; rm -rf "$B"; mkdir -p "$B/res" "$B/gen" "$B/classes" "$B/assets" dist
 cp -r www "$B/assets/www"
@@ -21,7 +25,7 @@ echo "== resources"
 "$BUILD_TOOLS/aapt2$EXE" compile --dir src/res -o "$B/res.zip"
 "$BUILD_TOOLS/aapt2$EXE" link -o "$B/unsigned.apk" -I "$ANDROID_JAR" \
   --manifest src/AndroidManifest.xml --java "$B/gen" "$B/res.zip" \
-  --min-sdk-version 26 --target-sdk-version 34 --version-code 2 --version-name 1.1
+  --min-sdk-version 26 --target-sdk-version 34 --version-code "$VCODE" --version-name "$VNAME"
 
 echo "== java"
 "$J/javac" -source 8 -target 8 -Xlint:-options -encoding UTF-8 -bootclasspath "$ANDROID_JAR" -classpath "$BUILD_TOOLS/core-lambda-stubs.jar" -d "$B/classes" \

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Used Apple Estimator</title>
+<meta name="description" content="How much is a used iPhone or iPad worth in Morocco? Free app with estimates in MAD.">
+<link rel="icon" href="app/icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="app/icons/apple-touch-icon.png">
+<link rel="stylesheet" href="app/fonts/fonts.css">
+<style>
+:root{
+  --bg:#EDEEF2; --surface:#F8F8FA; --ink:#131626; --muted:#585E75; --line:#D3D6E1;
+  --accent:#2B3AC4; --on-accent:#FFFFFF; --tag:#FFC94D;
+  --f-display:'Archivo','Arial Narrow',Arial,sans-serif;
+  --f-body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root{--bg:#0E1120; --surface:#161A2C; --ink:#E9EBF5; --muted:#9BA1BB; --line:#2A3050; --accent:#94A0FF; --on-accent:#0E1120}
+}
+html[lang="ar"]{--f-body:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;--f-display:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 var(--f-body);
+  padding:max(16px,env(safe-area-inset-top)) max(16px,env(safe-area-inset-right)) 40px max(16px,env(safe-area-inset-left))}
+.wrap{max-width:880px;margin:0 auto;display:grid;gap:22px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font:800 18px var(--f-display);font-stretch:85%}
+.brand img{width:40px;height:40px;border-radius:10px}
+.lang{display:inline-flex;border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--surface)}
+.lang button{font:600 13px var(--f-body);padding:8px 11px;min-height:40px;border:0;border-inline-end:1px solid var(--line);background:none;color:var(--muted);cursor:pointer}
+.lang button:last-child{border-inline-end:0}
+.lang button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+h1{margin:6px 0 0;font:800 clamp(32px,7vw,52px)/1.03 var(--f-display);font-stretch:75%;letter-spacing:-.01em;text-wrap:balance}
+html[lang="ar"] h1{font-stretch:100%;line-height:1.3}
+.lede{margin:10px 0 0;color:var(--muted);max-width:60ch;font-size:17px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:12px;align-content:start}
+.card.first{border:2px solid var(--accent)}
+.card h2{margin:0;font:700 20px var(--f-display)}
+.meta{margin:0;color:var(--muted);font-size:14px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:54px;padding:12px 18px;border-radius:10px;
+  font:700 16px var(--f-body);text-decoration:none;border:1.5px solid var(--accent);color:var(--accent);background:none}
+.btn.pri{background:var(--accent);color:var(--on-accent)}
+.btn:focus-visible,.lang button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.qr{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px}
+.qr img{width:150px;height:150px;border-radius:8px;background:#fff;padding:4px}
+.qr b{display:block;font-size:17px}
+.qr code{font:13px var(--f-mono);color:var(--muted);overflow-wrap:anywhere}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.steps section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.steps h3{margin:0 0 10px;font:700 17px var(--f-display)}
+ol{margin:0;padding-inline-start:22px;display:grid;gap:8px}
+.note{margin:10px 0 0;font-size:14px;color:var(--muted)}
+footer{color:var(--muted);font-size:14px;display:grid;gap:6px;border-top:1px solid var(--line);padding-top:16px}
+footer p{margin:0}
+@media (max-width:520px){.qr{grid-template-columns:1fr;justify-items:center;text-align:center}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="brand"><img src="app/icons/icon-192.png" alt=""><span>Apple Estimator</span></div>
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button><button type="button" data-lang="fr">FR</button><button type="button" data-lang="ar">الدارجة</button>
+    </div>
+  </div>
+
+  <header>
+    <h1 data-t="title"></h1>
+    <p class="lede" data-t="lede"></p>
+  </header>
+
+  <div class="cards" id="cards">
+    <section class="card" id="android">
+      <h2 data-t="androidH"></h2>
+      <p class="meta" data-t="androidMeta"></p>
+      <a class="btn pri" href="https://github.com/Newtr0n55/apple-estimator/releases/latest/download/UsedAppleEstimator.apk" data-t="androidBtn"></a>
+      <p class="meta" data-t="updateNote"></p>
+    </section>
+    <section class="card" id="web">
+      <h2 data-t="webH"></h2>
+      <p class="meta" data-t="webMeta"></p>
+      <a class="btn" href="app/" data-t="webBtn"></a>
+    </section>
+  </div>
+
+  <div class="qr">
+    <img src="qr.svg" alt="QR code: https://newtr0n55.github.io/apple-estimator/">
+    <div><b data-t="qrH"></b><code>https://newtr0n55.github.io/apple-estimator/</code></div>
+  </div>
+
+  <div class="steps">
+    <section>
+      <h3 data-t="aStepsH"></h3>
+      <ol><li data-t="a1"></li><li data-t="a2"></li><li data-t="a3"></li><li data-t="a4"></li></ol>
+    </section>
+    <section>
+      <h3 data-t="iStepsH"></h3>
+      <ol><li data-t="i1"></li><li data-t="i2"></li><li data-t="i3"></li></ol>
+      <p class="note" data-t="iNote"></p>
+    </section>
+  </div>
+
+  <footer>
+    <p data-t="privacy"></p>
+    <p data-t="foot"></p>
+  </footer>
+</div>
+
+<script>
+const V = '1.2', D = '2026-10-23';
+const TXT = {
+  en: {
+    title: 'How much is a used iPhone or iPad worth?',
+    lede: 'Pick the model, describe its condition, and get a fair price in MAD, based on Moroccan Marketplace listings and updated every week.',
+    androidH: 'Android', androidMeta: 'Version ' + V + ' · ' + D + ' · Android 8 or newer', androidBtn: 'Download the app (APK)',
+    updateNote: 'Already have it? The new version installs over the old one and keeps your data.',
+    webH: 'iPhone and computer', webMeta: 'Works in Safari or Chrome, nothing to install. Add it to your home screen to use it like an app.',
+    webBtn: 'Open the web version',
+    qrH: 'Scan to open this page on a phone',
+    aStepsH: 'Install on Android',
+    a1: 'Tap “Download the app”. The file UsedAppleEstimator.apk downloads.',
+    a2: 'Open the file. If your phone says it is not allowed, tap Settings, turn on “Allow from this source”, and go back.',
+    a3: 'Tap Install. If Play Protect warns you, tap “More details”, then “Install anyway”. This is normal for apps outside the Play Store.',
+    a4: 'Open the app and answer the first questions.',
+    iStepsH: 'Add to the iPhone home screen',
+    i1: 'Open the web version in Safari.',
+    i2: 'Tap the Share button (the square with an arrow).',
+    i3: 'Choose “Add to Home Screen”, then “Add”.',
+    iNote: 'After the first visit it also works without internet.',
+    privacy: 'The app never collects your name, number, contacts or location. Sharing prices is optional and anonymous, and you can delete it at any time.',
+    foot: 'Prices in MAD, from Marketplace listings in Morocco. An estimate, not a market quote: check battery, Face ID and iCloud in person before paying.'
+  },
+  fr: {
+    title: 'Combien vaut un iPhone ou un iPad d’occasion ?',
+    lede: 'Choisissez le modèle, décrivez son état et obtenez un prix juste en MAD, basé sur les annonces Marketplace au Maroc et mis à jour chaque semaine.',
+    androidH: 'Android', androidMeta: 'Version ' + V + ' · ' + D + ' · Android 8 ou plus récent', androidBtn: 'Télécharger l’application (APK)',
+    updateNote: 'Vous l’avez déjà ? La nouvelle version s’installe par-dessus l’ancienne et garde vos données.',
+    webH: 'iPhone et ordinateur', webMeta: 'Fonctionne dans Safari ou Chrome, rien à installer. Ajoutez-la à l’écran d’accueil pour l’utiliser comme une application.',
+    webBtn: 'Ouvrir la version web',
+    qrH: 'Scannez pour ouvrir cette page sur un téléphone',
+    aStepsH: 'Installer sur Android',
+    a1: 'Appuyez sur « Télécharger l’application ». Le fichier UsedAppleEstimator.apk se télécharge.',
+    a2: 'Ouvrez le fichier. Si le téléphone refuse, appuyez sur Paramètres, activez « Autoriser cette source » et revenez.',
+    a3: 'Appuyez sur Installer. Si Play Protect vous avertit, appuyez sur « Plus de détails » puis « Installer quand même ». C’est normal hors Play Store.',
+    a4: 'Ouvrez l’application et répondez aux premières questions.',
+    iStepsH: 'Ajouter à l’écran d’accueil de l’iPhone',
+    i1: 'Ouvrez la version web dans Safari.',
+    i2: 'Appuyez sur le bouton Partager (le carré avec une flèche).',
+    i3: 'Choisissez « Sur l’écran d’accueil », puis « Ajouter ».',
+    iNote: 'Après la première visite, elle fonctionne aussi sans internet.',
+    privacy: 'L’application ne collecte jamais votre nom, numéro, contacts ou position. Le partage des prix est facultatif et anonyme, et vous pouvez le supprimer à tout moment.',
+    foot: 'Prix en MAD, issus des annonces Marketplace au Maroc. Une estimation, pas un prix de marché : vérifiez batterie, Face ID et iCloud sur place avant de payer.'
+  },
+  ar: {
+    title: 'شحال يسوى الآيفون ولا الآيباد المستعمل؟',
+    lede: 'ختار الموديل، قول شنو حالتو، وخود ثمن معقول بالدرهم، مبني على إعلانات Marketplace فالمغرب وكيتجدد كل سيمانة.',
+    androidH: 'أندرويد', androidMeta: 'النسخة ' + V + ' · ' + D + ' · أندرويد 8 ولا كثر', androidBtn: 'تيليشارجي التطبيق (APK)',
+    updateNote: 'عندك التطبيق من قبل؟ النسخة الجديدة كتنصّب فوق القديمة وكتبقى المعلومات ديالك.',
+    webH: 'آيفون ولا الكمبيوتر', webMeta: 'خدامة فـ Safari ولا Chrome، بلا ما تنصّب والو. زيدها فالإيكران الرئيسي وتخدم بحال شي تطبيق.',
+    webBtn: 'حل النسخة ديال الويب',
+    qrH: 'سكاني باش تحل هاد الصفحة فالتيليفون',
+    aStepsH: 'كيفاش تنصّب فالأندرويد',
+    a1: 'ورك على «تيليشارجي التطبيق». الفيشي UsedAppleEstimator.apk غادي يتيليشارجا.',
+    a2: 'حل الفيشي. إلا قالك التيليفون ما مسموحش، ورك على Paramètres وشعل «Autoriser cette source»، ورجع.',
+    a3: 'ورك على Installer. إلا خرجات ليك رسالة ديال Play Protect، ورك «Plus de détails» ومن بعد «Installer quand même». هادشي عادي للتطبيقات اللي ماشي من Play Store.',
+    a4: 'حل التطبيق وجاوب على الأسئلة اللولين.',
+    iStepsH: 'كيفاش تزيدها فالإيكران ديال الآيفون',
+    i1: 'حل النسخة ديال الويب فـ Safari.',
+    i2: 'ورك على زر المشاركة (المربع اللي فيه فليشة).',
+    i3: 'ختار «Sur l’écran d’accueil» ولا «Add to Home Screen»، ومن بعد «Ajouter».',
+    iNote: 'من بعد أول مرة، كتخدم حتى بلا أنترنيت.',
+    privacy: 'التطبيق ما كيجمعش سميتك، النمرة ديالك، الكونطاكتات ولا فين كاين. مشاركة الأثمنة اختيارية وبلا سمية، وتقدر تمسحها فأي وقت.',
+    foot: 'الأثمنة بالدرهم، من إعلانات Marketplace فالمغرب. هادا تقدير ماشي ثمن مضمون: شوف الباطري وFace ID وiCloud بعينيك قبل ما تخلّص.'
+  }
+};
+function setLang(l){
+  if(!TXT[l]) l = 'en';
+  document.documentElement.lang = l; document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+  document.querySelectorAll('[data-t]').forEach(el => el.textContent = TXT[l][el.dataset.t]);
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
+  try{ localStorage.setItem('used-apple-lang', l); }catch(e){}   // the web version reads the same key
+}
+document.querySelector('.lang').addEventListener('click', e => { const b = e.target.closest('button'); if(b) setLang(b.dataset.lang); });
+let lang = '';
+try{ lang = localStorage.getItem('used-apple-lang') || ''; }catch(e){}
+if(!lang){ const n = (navigator.language || 'en').slice(0, 2).toLowerCase(); lang = n === 'fr' || n === 'ar' ? n : 'en'; }
+setLang(lang);
+// put the right option first for this device
+const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+const android = /Android/.test(navigator.userAgent);
+if(ios){ document.getElementById('cards').prepend(document.getElementById('web')); document.getElementById('web').classList.add('first'); document.querySelector('#web .btn').classList.add('pri'); }
+else if(android) document.getElementById('android').classList.add('first');
+</script>
+</body>
+</html>

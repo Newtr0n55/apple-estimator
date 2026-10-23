@@ -1,0 +1,1287 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<script>window.APP_BUILD = {"code":3,"name":"1.2"};</script>
+<title>Used Apple Estimator</title>
+
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Estimator">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#EDEEF2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0E1120" media="(prefers-color-scheme: dark)">
+</head>
+<body>
+<style>
+/* Layout concept: an appraisal desk. Form on the left runs top to bottom like a checklist; the right column is a receipt that re-adds itself line by line. */
+:root{
+  --bg:#EDEEF2; --surface:#F8F8FA; --ink:#131626; --muted:#585E75; --line:#D3D6E1;
+  --accent:#2B3AC4; --on-accent:#FFFFFF; --soft:#E1E4F5;
+  --pos:#1F7A4D; --neg:#B3362F; --warn:#8F6310;
+  --f-display:'Archivo','Arial Narrow',Arial,sans-serif;
+  --f-body:'Instrument Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --f-mono:'IBM Plex Mono',ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0E1120; --surface:#161A2C; --ink:#E9EBF5; --muted:#9BA1BB; --line:#2A3050;
+    --accent:#94A0FF; --on-accent:#0E1120; --soft:#1F2545;
+    --pos:#5CC98E; --neg:#F0857E; --warn:#E0B04F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0E1120; --surface:#161A2C; --ink:#E9EBF5; --muted:#9BA1BB; --line:#2A3050;
+  --accent:#94A0FF; --on-accent:#0E1120; --soft:#1F2545;
+  --pos:#5CC98E; --neg:#F0857E; --warn:#E0B04F; color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.5;
+  padding-block:28px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1120px;margin:0 auto}
+h1,h2,h3{margin:0;font-family:var(--f-display);text-wrap:balance}
+.eyebrow{margin:0 0 8px;font:500 12px/1.3 var(--f-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+h1{font-size:clamp(30px,5vw,46px);font-weight:800;font-stretch:75%;line-height:1.02;letter-spacing:-.01em}
+.lede{max-width:62ch;margin:12px 0 0;color:var(--muted)}
+.app{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,400px);gap:24px;margin-top:26px;align-items:start}
+.form{background:var(--surface);border:1px solid var(--line);border-radius:6px;min-width:0}
+.sec{padding:20px 22px;border-top:1px solid var(--line);display:grid;gap:14px;min-width:0}
+.sec:first-child{border-top:0}
+.sec h2{font-size:13px;font-weight:700;font-stretch:100%;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px}
+.fld{display:grid;gap:6px;min-width:0}
+.fld>label,.fld>.lab{font-weight:600;font-size:13px}
+.hint{font-size:12.5px;color:var(--muted);margin:0}
+select,input[type=number]{width:100%;font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:9px 10px;min-height:40px}
+select:focus-visible,input:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+input[type=number]{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.pills{display:flex;flex-wrap:wrap;gap:6px}
+.pill{position:relative;display:block}
+.pill input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.pill span{display:block;padding:8px 12px;border:1px solid var(--line);border-radius:4px;background:var(--bg);font-weight:500;font-size:13.5px;cursor:pointer}
+.pill input:checked+span{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.pill input:focus-visible+span{outline:2px solid var(--accent);outline-offset:2px}
+.pill.chk span{display:flex;gap:8px;align-items:center}
+.pill.chk span::before{content:"";width:14px;height:14px;border:1.5px solid var(--muted);border-radius:3px;flex:none}
+.pill.chk input:checked+span::before{background:var(--on-accent);border-color:var(--on-accent)}
+.pct{font-family:var(--f-mono);font-size:12px;opacity:.75;margin-inline-start:4px}
+.bat{display:grid;grid-template-columns:minmax(0,1fr) 92px;gap:12px;align-items:center}
+input[type=range]{width:100%;accent-color:var(--accent);min-height:40px}
+.tick{display:flex;justify-content:space-between;font:12px var(--f-mono);color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.chip{display:inline-flex;gap:7px;align-items:center;font-size:12.5px;font-weight:600;padding:3px 9px;border:1px solid var(--line);border-radius:999px;background:var(--bg)}
+.chip i{width:8px;height:8px;border-radius:50%;background:var(--muted);display:block}
+.chip.L i{background:var(--pos)} .chip.T i{background:var(--warn)} .chip.E i{background:var(--neg)}
+.src{margin:0;font-size:12.5px;color:var(--muted)}
+
+/* receipt */
+.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 16px);display:grid;gap:14px;min-width:0}
+.result{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--accent);border-radius:6px;padding:20px 22px;display:grid;gap:14px;min-width:0}
+.big{font:800 clamp(46px,8vw,66px)/1 var(--f-display);font-stretch:75%;font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+.big small{font:500 15px var(--f-mono);letter-spacing:.04em;margin-inline-start:8px;color:var(--muted)}
+.range{margin:0;font-family:var(--f-mono);font-size:13px;color:var(--muted)}
+.verdict{border:1px solid var(--line);border-radius:4px;padding:10px 12px;font-size:13.5px;background:var(--bg)}
+.verdict b{font-family:var(--f-mono)}
+.verdict.hi{border-color:var(--neg)} .verdict.lo{border-color:var(--warn)} .verdict.ok{border-color:var(--pos)}
+.ask{display:grid;grid-template-columns:1fr;gap:6px}
+.lines{list-style:none;margin:0;padding:0;display:grid;gap:7px;font-size:13px}
+.lines li{display:flex;gap:8px;align-items:baseline;min-width:0}
+.lines .l{min-width:0;overflow-wrap:anywhere}
+.lines .d{flex:1;border-bottom:1px dotted var(--line);transform:translateY(-3px);min-width:12px}
+.lines .a{font-family:var(--f-mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.lines .a.neg{color:var(--neg)} .lines .a.pos{color:var(--pos)}
+.lines .p{font:11.5px var(--f-mono);color:var(--muted);margin-inline-start:5px}
+.lines li.sub{padding-top:7px;border-top:1px solid var(--line);font-weight:600}
+.lines li.tot{padding-top:8px;border-top:2px solid var(--ink);font-weight:700;font-size:14px}
+.btn{font:600 13.5px var(--f-body);padding:9px 14px;border-radius:4px;border:1px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;min-height:40px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+textarea.copybox{width:100%;min-height:110px;font:12px var(--f-mono);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:8px}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+
+/* settings */
+details.set{margin-top:24px;background:var(--surface);border:1px solid var(--line);border-radius:6px}
+details.set summary{cursor:pointer;padding:16px 22px;font-weight:700;font-family:var(--f-display);font-size:16px}
+.setbody{padding:4px 22px 22px;display:grid;gap:22px}
+.sg{display:grid;gap:10px}
+.sg h3{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.sgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px 20px}
+.sl{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13px;min-width:0}
+.sl>span:first-child{min-width:0}
+.sl .inp{display:flex;align-items:center;gap:5px;flex:none}
+.sl input{width:74px;min-height:34px;padding:5px 8px}
+.sl em{font:12px var(--f-mono);font-style:normal;color:var(--muted);width:28px}
+.basis{font-size:13px;color:var(--muted);display:grid;gap:6px}
+.basis p{margin:0}
+
+html[lang="ar"]{--f-body:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif;--f-display:'IBM Plex Sans Arabic','Segoe UI',Tahoma,sans-serif}
+html[lang="ar"] *{letter-spacing:0!important;text-transform:none!important}
+html[lang="ar"] h1{font-stretch:100%;line-height:1.3}
+html[lang="ar"] .big{font-stretch:100%}
+.pct,.lines .a,.lines .p,.big,.dock b{direction:ltr;unicode-bidi:isolate}
+input[type=number]{direction:ltr}
+header{display:grid}
+.warnline{color:var(--warn)}
+.lockbox{border:1.5px solid var(--line);border-left-width:6px;border-radius:8px;padding:10px 12px;margin:10px 0 0}
+.lockbox b{display:block;font-size:13.5px;margin-bottom:2px}
+.lockbox p{margin:0;font-size:12.5px;color:var(--muted)}
+.lockbox.green{border-color:var(--pos);background:color-mix(in srgb,var(--pos) 12%,transparent)}
+.lockbox.red{border-color:var(--neg);background:color-mix(in srgb,var(--neg) 12%,transparent)}
+.lockbox.yellow{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.ownerline{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:13px;cursor:pointer}
+.ownerline input{margin-top:3px}
+.tools{justify-self:end;display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.theme,.lang{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden;background:var(--surface)}
+.theme button,.lang button{font:600 12.5px var(--f-body);padding:7px 12px;min-height:34px;border:0;border-inline-end:1px solid var(--line);background:transparent;color:var(--muted);cursor:pointer}
+.theme button:last-child,.lang button:last-child{border-inline-end:0}
+.theme button[aria-pressed="true"],.lang button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
+.theme button:focus-visible,.lang button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.dock{display:none}
+@media (max-width:900px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  .side{position:static}
+  .dock{display:flex;position:sticky;bottom:0;z-index:5;justify-content:space-between;align-items:center;gap:12px;
+    background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:6px;margin-top:-8px}
+  .dock b{font:800 26px var(--f-display);font-stretch:75%;font-variant-numeric:tabular-nums}
+  .dock button{font:600 13px var(--f-body);background:var(--bg);color:var(--ink);border:0;border-radius:4px;padding:8px 12px;min-height:38px;cursor:pointer}
+  .sec{padding:16px}
+  .result{padding:16px}
+}
+@media (prefers-reduced-motion:no-preference){ .big{transition:opacity .15s} }
+/* ---------- Android app shell ---------- */
+html{-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;-webkit-text-size-adjust:100%}
+body{margin:0}
+[hidden]{display:none!important}
+/* the percentage inside a pill is a nested span: keep it plain text */
+.pill>span>span{display:inline;padding:0;border:0;background:none;min-height:0;border-radius:0}
+button,.pill span,summary,.tick{-webkit-user-select:none;user-select:none}
+.btn:active,.pill span:active,.theme button:active,.lang button:active,.dock button:active,summary:active{filter:brightness(.9)}
+/* first-launch consent */
+html.locked,html.locked body{overflow:hidden}
+.onboard{position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:calc(env(safe-area-inset-top,0px) + 16px) 16px calc(env(safe-area-inset-bottom,0px) + 24px)}
+.obin{max-width:560px;margin:0 auto;display:grid;gap:14px}
+.obin .lang{justify-self:end}
+.obin h1{margin-top:4px}
+.obin .lede{margin:0}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+.q b{font-size:15px}
+.yn .pill{flex:1}
+.yn .pill span{justify-content:center}
+.btn:disabled{opacity:.45;cursor:default}
+#obGo{min-height:52px;font-size:16px}
+/* deals, reminder card, data panel */
+.deal{display:grid;gap:8px;border-top:1px solid var(--line);padding-top:14px}
+.deal .eyebrow{margin:0}
+.lab{font-weight:600;font-size:13px}
+.dealrow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px}
+.dealrow[hidden]{display:none}
+.prompt{margin-top:18px;background:var(--surface);border:1px solid var(--accent);border-inline-start-width:6px;border-radius:12px;padding:14px 16px;display:grid;gap:10px}
+.prompt .hint{font-size:13.5px}
+.btn.danger{border-color:var(--neg);color:var(--neg)}
+#dataSet .q{background:var(--bg)}
+@media (max-width:900px){
+  body{padding-top:14px;padding-bottom:calc(108px + env(safe-area-inset-bottom,0px))}
+  .tools{justify-self:stretch;justify-content:space-between;flex-wrap:nowrap;gap:6px;margin-bottom:18px}
+  .theme button,.lang button{padding:8px 10px;min-height:40px}
+  h1{font-size:30px}
+  .lede{font-size:14px}
+  .app{margin-top:18px;gap:16px}
+  .form,.result,details.set{border-radius:12px}
+  .sec{gap:16px}
+  select,input[type=number]{font-size:16px;min-height:48px;border-radius:8px}
+  .pills{gap:8px}
+  .pill span{display:flex;align-items:center;min-height:44px;padding:9px 14px;border-radius:8px;font-size:14px}
+  .bat{grid-template-columns:minmax(0,1fr) 84px}
+  input[type=range]{min-height:44px}
+  .btn{min-height:48px;border-radius:8px;flex:1 1 auto}
+  .ownerline{font-size:14px}
+  .ownerline input{width:20px;height:20px;flex:none;accent-color:var(--accent)}
+  .dock{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));margin:0;
+    border-radius:14px;padding:10px;padding-inline-start:16px;box-shadow:0 8px 28px rgba(0,0,0,.28);
+    transition:transform .22s ease,opacity .22s ease}
+  .dock.away{transform:translateY(calc(100% + 24px));opacity:0;pointer-events:none}
+  .dock button{min-height:46px;border-radius:10px;padding:8px 16px;font-size:14px}
+  details.set{margin-top:16px}
+  details.set summary{padding:16px;min-height:52px}
+  .setbody{padding:4px 16px 18px}
+  .sgrid{grid-template-columns:minmax(0,1fr)}
+  .sl{font-size:14px}
+  .sl input{min-height:42px;width:84px}
+}
+/* new APK available */
+.updbar{margin-top:14px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;background:var(--accent);color:var(--on-accent);border-radius:12px;padding:10px 12px}
+.updbar span{flex:1 1 180px;font-weight:600}
+.updbar .btn{min-height:40px;text-decoration:none;display:inline-flex;align-items:center}
+.updbar .btn.pri{background:var(--on-accent);color:var(--accent);border-color:var(--on-accent)}
+.updbar .btn:not(.pri){border-color:var(--on-accent);color:var(--on-accent)}
+
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="tools"><div class="lang" role="group" aria-label="Language"><button type="button" data-lang="en" aria-pressed="true">EN</button><button type="button" data-lang="fr" aria-pressed="false">FR</button><button type="button" data-lang="ar" aria-pressed="false">الدارجة</button></div>
+      <div class="theme" role="group" aria-label="Color theme">
+      <button type="button" data-mode="system" aria-pressed="true">System</button>
+      <button type="button" data-mode="light" aria-pressed="false">Light</button>
+      <button type="button" data-mode="dark" aria-pressed="false">Dark</button>
+      </div></div>
+    <p class="eyebrow">Marketplace Maroc &middot; asking prices captured 19 Oct 2026 &middot; MAD (DH)</p>
+    <h1>Used iPhone &amp; iPad price estimator</h1>
+    <p class="lede">Pick the device, then describe what is wrong with it. Each lock, fault and repair moves the price by a percentage you can read in the receipt and change in the assumptions panel. The starting values below are an example.</p>
+  </header>
+
+  <div class="updbar" id="updateBar" role="status" hidden></div>
+  <div class="prompt" id="askPrompt" role="status" hidden></div>
+
+  <div class="app">
+    <div class="form" id="formcol">
+      <section class="sec" aria-labelledby="h-dev">
+        <h2 id="h-dev">Device</h2>
+        <div class="row">
+          <div class="fld"><span class="lab" id="lab-type">Type</span>
+            <div class="pills" role="radiogroup" aria-labelledby="lab-type" id="typePills"></div></div>
+          <div class="fld"><label for="model">Model</label><select id="model"></select></div>
+        </div>
+        <div class="fld lockfld"><span class="lab" id="h-lock">Lock status</span>
+          <div class="pills" role="radiogroup" aria-labelledby="h-lock" id="lockPills"></div>
+          <p class="hint" id="lockHint"></p>
+          <p class="hint" id="bypassHint" hidden></p>
+          <p class="hint warnline" id="lockWarn" hidden></p>
+          <label class="ownerline" id="ownerWrap" hidden><input type="checkbox" name="owner" id="ownerChk"><span id="ownerTxt"></span></label>
+          <div class="lockbox" id="lockBox" role="status" hidden><b id="lockBoxT"></b><p id="lockBoxP"></p></div></div>
+        <div class="row">
+          <div class="fld" id="storBox"><label for="storage">Storage</label><select id="storage"></select></div>
+          <div class="fld" id="connBox" hidden><span class="lab" id="lab-conn">Connectivity</span>
+            <div class="pills" role="radiogroup" aria-labelledby="lab-conn" id="connPills"></div></div>
+          <div class="fld"><label for="base">Suggested base price in MAD <span class="pct" id="baseTag"></span></label>
+            <input type="number" id="base" min="0" step="50" inputmode="numeric">
+            <p class="hint" id="baseHint">Clean, original, unlocked, about 90% battery, everything working.</p>
+            <div class="btns"><button class="btn" id="baseReset" type="button" hidden>Use suggested price</button></div></div>
+        </div>
+        <p class="src" id="srcNote"></p>
+      </section>
+
+      <section class="sec" aria-labelledby="h-bat">
+        <h2 id="h-bat">Battery and biometrics</h2>
+        <div class="fld">
+          <label for="battery">Battery health: <b id="batOut">85%</b></label>
+          <div class="bat"><input type="range" id="battery" min="40" max="100" step="1" value="85"><input type="number" id="batnum" min="40" max="100" step="1" value="85" aria-label="Battery health percent"></div>
+          <div class="tick"><span>40%</span><span>70%</span><span>100%</span></div>
+          <div class="pills" id="batFlags"></div>
+          <p class="hint">iPhone: Settings, Battery, Battery Health. An iPad may not show a percentage. If the seller gave none, tick Not stated and 85% is assumed.</p>
+        </div>
+        <div class="row">
+          <div class="fld"><label for="batType">Battery origin</label><select id="batType"></select></div>
+          <div class="fld" id="bioBox"></div>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="h-scr">
+        <h2 id="h-scr">Screen and body</h2>
+        <div class="row">
+          <div class="fld"><label for="screenOrigin">Screen origin</label><select id="screenOrigin"></select></div>
+          <div class="fld"><label for="screenCond">Screen condition</label><select id="screenCond"></select></div>
+          <div class="fld" id="backBox"></div>
+          <div class="fld"><label for="body">Frame and body</label><select id="body"></select></div>
+        </div>
+      </section>
+
+      <section class="sec" aria-labelledby="h-fault">
+        <h2 id="h-fault">Faults and history</h2>
+        <div class="pills" id="funcBox"></div>
+      </section>
+
+      <section class="sec" aria-labelledby="h-extra">
+        <h2 id="h-extra">Warranty and extras</h2>
+        <div class="row">
+          <div class="fld"><label for="warranty">Warranty</label><select id="warranty"></select></div>
+        </div>
+        <div class="pills" id="accBox"></div>
+        <p class="hint">Extras are added as a flat amount in MAD, not as a percentage.</p>
+      </section>
+    </div>
+
+    <aside class="side" id="result" aria-live="polite">
+      <div class="result">
+        <div>
+          <p class="eyebrow">Estimated price</p>
+          <div class="big" id="big">0<small>MAD</small></div>
+          <p class="range" id="rangeOut"></p>
+        </div>
+        <div class="chips" id="chipRow"></div>
+        <div class="ask">
+          <label for="ask" style="font-weight:600;font-size:13px">Seller's asking price in MAD (optional)</label>
+          <input type="number" id="ask" min="0" step="50" inputmode="numeric" placeholder="e.g. 5500">
+          <div class="verdict" id="verdict" hidden></div>
+        </div>
+        <ul class="lines" id="lines"></ul>
+        <div class="btns">
+          <button class="btn pri" id="copyBtn" type="button">Copy summary</button>
+          <button class="btn" id="shareBtn" type="button" hidden>Share</button>
+          <button class="btn" id="resetForm" type="button">Reset form</button>
+        </div>
+        <div class="deal" id="dealBox"></div>
+        <textarea class="copybox" id="copyBox" readonly hidden aria-label="Summary text"></textarea>
+        <p class="note">An estimate from asking prices and the percentages below, not a market quote. Check battery, Face ID and iCloud in person before paying.</p>
+      </div>
+    </aside>
+  </div>
+
+  <div class="dock" id="dock"><div><span class="eyebrow" style="margin:0;color:inherit;opacity:.7">Estimate</span><br><b id="dockPrice">0 MAD</b></div><button type="button" id="dockBtn">See breakdown</button></div>
+
+  <details class="set" id="settings">
+    <summary>Assumptions behind the percentages</summary>
+    <div class="setbody">
+      <div class="basis">
+        <p><b>What comes from the listings:</b> the base price of each model, read from the clean listings, and the bypass discount. Bypassed units were priced about 20 to 55% under comparable ones. The chip under the model says how many listings the base price rests on.</p>
+        <p><b>What is my assumption:</b> every other percentage. The listings give no reliable signal for Face ID faults, battery wear or cracked glass, because sellers price these inconsistently. Change any number and the receipt updates. Changes are kept in this browser.</p>
+      </div>
+      <div id="setHost"></div>
+      <div class="btns"><button class="btn" id="resetCfg" type="button">Restore default assumptions</button></div>
+    </div>
+  </details>
+
+  <details class="set" id="dataSet"><summary>Data sharing</summary><div class="setbody" id="dataBody"></div></details>
+</div>
+
+<div class="onboard" id="onboard" hidden></div>
+
+<script>window.TR = {fr:{}, ar:{}};</script>
+<script>Object.assign(TR.fr, {"Color theme":"Thème de couleur","Language":"Langue","System":"Système","Light":"Clair","Dark":"Sombre","Marketplace Maroc · asking prices captured 19 Oct 2026 · MAD (DH)":"Marketplace Maroc · prix demandés relevés le 19 oct. 2026 · MAD (DH)","Used iPhone & iPad price estimator":"Estimateur de prix iPhone et iPad d’occasion","Pick the device, then describe what is wrong with it. Each lock, fault and repair moves the price by a percentage you can read in the receipt and change in the assumptions panel. The starting values below are an example.":"Choisissez l’appareil, puis décrivez ses défauts. Chaque verrouillage, panne ou réparation fait varier le prix d’un pourcentage visible dans le reçu et modifiable dans le panneau des hypothèses. Les valeurs de départ ci-dessous sont un exemple.","Device":"Appareil","Type":"Type","Model":"Modèle","Storage":"Stockage","Connectivity":"Connectivité","Suggested base price in MAD":"Prix de base suggéré en MAD","Clean, original, unlocked, about 90% battery, everything working.":"État propre, d’origine, déverrouillé, batterie vers 90 %, tout fonctionne.","Use suggested price":"Utiliser le prix suggéré","Lock status":"Statut de verrouillage","Battery and biometrics":"Batterie et biométrie","Battery health:":"Santé de la batterie :","Battery health percent":"Santé de la batterie en pourcentage","iPhone: Settings, Battery, Battery Health. An iPad may not show a percentage. If the seller gave none, tick Not stated and 85% is assumed.":"iPhone : Réglages, Batterie, État de la batterie. Un iPad peut ne pas afficher de pourcentage. Si le vendeur n’en donne pas, cochez Non indiqué : 85 % est alors supposé.","Battery origin":"Origine de la batterie","Screen and body":"Écran et châssis","Screen origin":"Origine de l’écran","Screen condition":"État de l’écran","Frame and body":"Cadre et coque","Faults and history":"Pannes et historique","Warranty and extras":"Garantie et accessoires","Warranty":"Garantie","Extras are added as a flat amount in MAD, not as a percentage.":"Les accessoires s’ajoutent en montant fixe en MAD, pas en pourcentage.","Estimated price":"Prix estimé","Seller's asking price in MAD (optional)":"Prix demandé par le vendeur en MAD (facultatif)","e.g. 5500":"ex. 5500","Copy summary":"Copier le résumé","Reset form":"Réinitialiser","Summary text":"Texte du résumé","An estimate from asking prices and the percentages below, not a market quote. Check battery, Face ID and iCloud in person before paying.":"Estimation fondée sur des prix demandés et sur les pourcentages ci-dessous, pas une cote du marché. Vérifiez en personne la batterie, Face ID et iCloud avant de payer.","Estimate":"Estimation","See breakdown":"Voir le détail","Assumptions behind the percentages":"Hypothèses derrière les pourcentages","What comes from the listings:":"Ce qui vient des annonces :","the base price of each model, read from the clean listings, and the bypass discount. Four bypassed units were priced about 35 to 45% under comparable clean ones. The chip under the model says how many listings the base price rests on.":"le prix de base de chaque modèle, lu sur les annonces en bon état, et la décote du contournement. Quatre appareils contournés étaient affichés environ 35 à 45 % sous des appareils propres comparables. La pastille sous le modèle indique sur combien d’annonces repose le prix de base.","What is my assumption:":"Ce qui est une hypothèse de ma part :","every other percentage. The listings give no reliable signal for Face ID faults, battery wear or cracked glass, because sellers price these inconsistently. Change any number and the receipt updates. Changes are kept in this browser.":"tous les autres pourcentages. Les annonces ne donnent aucun signal fiable pour les pannes de Face ID, l’usure de la batterie ou le verre fissuré, car les vendeurs les valorisent de façon incohérente. Modifiez n’importe quel chiffre et le reçu se met à jour. Les changements sont conservés dans ce navigateur.","Restore default assumptions":"Rétablir les hypothèses par défaut","Base from several listings":"Prix de base tiré de plusieurs annonces","Base from one listing":"Prix de base tiré d’une seule annonce","Base is my estimate":"Prix de base : mon estimation","Listings seen:":"Annonces vues :","Scaled to the base storage.":"Ramené au stockage de base.","Search-page price only, listing not opened.":"Prix de la page de recherche uniquement, annonce non ouverte.","Conflicts with nearby models. This is my estimate.":"Incohérent avec les modèles voisins. C’est mon estimation.","No listing found. My estimate.":"Aucune annonce trouvée. Mon estimation.","Other listings were priced 0 MAD.":"Les autres annonces étaient à 0 MAD.","Only defective, locked or 0 MAD listings. My estimate.":"Uniquement des annonces défectueuses, verrouillées ou à 0 MAD. Mon estimation.","The listing looks low. This is my estimate.":"L’annonce semble trop basse. C’est mon estimation.","Several had replaced parts.":"Plusieurs avaient des pièces remplacées.","No built-in price. Type the price of this exact model in perfect condition.":"Aucun prix intégré. Saisissez le prix de ce modèle exact en parfait état.","Other iPhone (enter your own base price)":"Autre iPhone (saisissez votre prix de base)","Other iPad (enter your own base price)":"Autre iPad (saisissez votre prix de base)","Official, factory unlocked":"Officiel, débloqué d’usine","Official, eSIM-only (US model)":"Officiel, eSIM uniquement (modèle US)","Needs a Turbo SIM":"Nécessite une Turbo SIM","Carrier locked":"Verrouillé opérateur","Bypass (Wi-Fi or iCloud)":"Contournement (Wi-Fi ou iCloud)","MDM locked":"Verrouillé MDM","iCloud locked":"Verrouillé iCloud","Original battery":"Batterie d’origine","Replaced, Apple genuine":"Remplacement Apple d’origine","Replaced, aftermarket":"Remplacement compatible","Face ID works":"Face ID fonctionne","Face ID not working":"Face ID ne fonctionne pas","Touch ID works":"Touch ID fonctionne","Touch ID not working":"Touch ID ne fonctionne pas","Original screen":"Écran d’origine","Replaced, aftermarket (60 Hz or lower quality)":"Remplacement compatible (60 Hz ou qualité inférieure)","No marks":"Aucune marque","Light scratches":"Rayures légères","Deep scratches":"Rayures profondes","Cracked, still works":"Fissuré, fonctionne encore","Cracked, touch problems":"Fissuré, problèmes tactiles","Lines, dead pixels or burn-in":"Lignes, pixels morts ou marquage","Back glass intact":"Verre arrière intact","Chips or hairline marks":"Éclats ou micro-fissures","Cracked":"Fissuré","Cracked, camera lens also broken":"Fissuré, objectif photo aussi cassé","Back straight":"Dos droit","Light dents":"Légères bosses","Bent":"Tordu","Clean":"Propre","Light scuffs":"Légères éraflures","Visible dents or scratches":"Bosses ou rayures visibles","Heavy dents or bent frame":"Fortes bosses ou cadre tordu","Camera broken, blurry or lens cracked":"Appareil photo cassé, flou ou objectif fissuré","Flash or torch not working":"Flash ou lampe torche en panne","Speaker, mic or earpiece fault":"Défaut de haut-parleur, micro ou écouteur","Charging port fault":"Défaut du port de charge","Wi-Fi or Bluetooth fault":"Défaut Wi-Fi ou Bluetooth","SIM or network not detected":"SIM ou réseau non détecté","A button does not work":"Un bouton ne fonctionne pas","Water damage history":"Antécédent de dégât des eaux","Board repair or opened by a third party":"Réparation de carte ou ouvert par un tiers","No warranty":"Aucune garantie","Shop warranty, 1 to 3 months":"Garantie boutique, 1 à 3 mois","Shop warranty, 6 to 12 months":"Garantie boutique, 6 à 12 mois","Apple warranty still running":"Garantie Apple en cours","Original box":"Boîte d’origine","Original charger and cable":"Chargeur et câble d’origine","Case or screen protector":"Coque ou protection d’écran","Apple Pencil":"Apple Pencil","Keyboard folio":"Étui clavier","Lock status (share of the price kept)":"Verrouillage (part du prix conservée)","Back glass (iPhone)":"Verre arrière (iPhone)","Back (metal)":"Dos (métal)","Faults":"Pannes","Warranty (adds to price)":"Garantie (s’ajoute au prix)","Extras (flat MAD)":"Accessoires (MAD fixes)","Back glass":"Verre arrière","Back and frame":"Dos et cadre","No change.":"Aucun changement.","Assumed 94%. eSIM-only phones are harder to sell locally.":"Hypothèse : 94 %. Les téléphones eSIM uniquement se revendent moins facilement sur place.","Assumed 85%. The phone only works with an add-on SIM adapter.":"Hypothèse : 85 %. Le téléphone ne fonctionne qu’avec un adaptateur SIM additionnel.","Assumed 75%. It only works on one network until unlocked.":"Hypothèse : 75 %. Il ne fonctionne que sur un réseau tant qu’il n’est pas débloqué.","Kept at 60%. Taken from the listings: bypassed units sat about 35 to 45% under comparable clean ones. A bypass can break after an update, and the device may be stolen.":"Conservé à 60 %. Tiré des annonces : les appareils contournés étaient environ 35 à 45 % sous des appareils propres comparables. Un contournement peut cesser de fonctionner après une mise à jour, et l’appareil peut être volé.","Assumed 50%. A company or school profile controls the device and may lock it again.":"Hypothèse : 50 %. Un profil d’entreprise ou d’école contrôle l’appareil et peut le reverrouiller.","Assumed 12%, which is parts value only. The device cannot be activated.":"Hypothèse : 12 %, soit la valeur des pièces seulement. L’appareil ne peut pas être activé.","Base price, {x}":"Prix de base, {x}","Storage {x}":"Stockage {x}","Wi-Fi + Cellular":"Wi-Fi + Cellulaire","Wi-Fi":"Wi-Fi","Clean, unlocked, working":"Propre, déverrouillé, fonctionnel","Battery assumed 85% (not stated)":"Batterie supposée à 85 % (non indiquée)","Battery {n}%":"Batterie {n} %","Battery: {x}":"Batterie : {x}","Screen replaced, Apple genuine":"Écran remplacé, Apple d’origine","Screen replaced, aftermarket":"Écran remplacé, compatible","Screen: {x}":"Écran : {x}","Back: {x}":"Dos : {x}","Body: {x}":"Coque : {x}","Cap on combined deductions ({n}%)":"Plafond des déductions cumulées ({n} %)","After condition":"Après état","Lock: {x} (keeps {n}%)":"Verrouillage : {x} (conserve {n} %)","Minimum, parts value ({n}% of clean price)":"Minimum, valeur des pièces ({n} % du prix propre)","Calculated total":"Total calculé","Not stated":"Non indiqué","(base)":"(base)","Filled in from the listings for {gb} in clean condition. Overwrite it with the price you think this model sells for when clean, such as what the seller or similar listings ask. Defects are subtracted below.":"Pré-rempli d’après les annonces pour {gb}, en bon état. Remplacez-le par le prix auquel vous pensez que ce modèle se vend en bon état, par exemple celui du vendeur ou d’annonces similaires. Les défauts sont déduits plus bas.","Type the price of this exact model in perfect condition. Storage is not scaled.":"Saisissez le prix de ce modèle exact en parfait état. Le stockage n’est pas ajusté.","edited, suggested {n}":"modifié, suggéré {n}","suggested":"suggéré","Fair range {lo} to {hi} MAD":"Fourchette correcte : {lo} à {hi} MAD","not stated (85% assumed)":"non indiquée (85 % supposé)","inside the fair range":"dans la fourchette correcte","above the estimate":"au-dessus de l’estimation","below the estimate. Check why: a hidden fault, a lock or a typo":"sous l’estimation. Vérifiez pourquoi : défaut caché, verrouillage ou faute de frappe","Copied":"Copié","Lock: {x}":"Verrouillage : {x}","Battery: {a}, {b}":"Batterie : {a}, {b}","not stated":"non indiquée","Face ID: {x}":"Face ID : {x}","Touch ID: {x}":"Touch ID : {x}","works":"fonctionne","not working":"ne fonctionne pas","Screen: {a}, {b}":"Écran : {a}, {b}","Back: {a}; body: {b}":"Dos : {a} ; coque : {b}","Faults: {x}":"Pannes : {x}","Estimate: {a} MAD (range {lo} to {hi})":"Estimation : {a} MAD (fourchette {lo} à {hi})","Global":"Général","Storage: price change per doubling":"Stockage : variation de prix par doublement","iPad cellular surcharge":"Supplément iPad cellulaire","Cap on combined deductions":"Plafond des déductions cumulées","Minimum price (share of clean price)":"Prix minimum (part du prix propre)","Fair range around the estimate":"Fourchette autour de l’estimation","Battery curve (adjustment at each health level)":"Courbe de batterie (ajustement à chaque niveau de santé)","At {n}% health":"À {n} % de santé"});</script>
+<script>Object.assign(TR.ar, {"Color theme":"سمة الألوان","Language":"اللغة","System":"النظام","Light":"فاتح","Dark":"داكن","Marketplace Maroc · asking prices captured 19 Oct 2026 · MAD (DH)":"Marketplace المغرب · الأسعار المعروضة بتاريخ 19 أكتوبر 2026 · MAD (DH)","Used iPhone & iPad price estimator":"مقدّر أسعار iPhone وiPad المستعملة","Pick the device, then describe what is wrong with it. Each lock, fault and repair moves the price by a percentage you can read in the receipt and change in the assumptions panel. The starting values below are an example.":"اختر الجهاز ثم صف عيوبه. كل قفل أو عطل أو إصلاح يغيّر السعر بنسبة مئوية تراها في الإيصال ويمكنك تعديلها في لوحة الافتراضات. القيم الابتدائية أدناه مثال.","Device":"الجهاز","Type":"النوع","Model":"الطراز","Storage":"السعة","Connectivity":"الاتصال","Suggested base price in MAD":"سعر الأساس المقترح بالدرهم","Clean, original, unlocked, about 90% battery, everything working.":"نظيف، أصلي، غير مقفل، بطارية حوالي 90%، كل شيء يعمل.","Use suggested price":"استخدم السعر المقترح","Lock status":"حالة القفل","Battery and biometrics":"البطارية والبصمة","Battery health:":"صحة البطارية:","Battery health percent":"نسبة صحة البطارية","iPhone: Settings, Battery, Battery Health. An iPad may not show a percentage. If the seller gave none, tick Not stated and 85% is assumed.":"iPhone: الإعدادات ثم البطارية ثم صحة البطارية. قد لا يعرض iPad نسبة مئوية. إذا لم يذكرها البائع فحدّد «غير مذكور» وسيُفترض 85%.","Battery origin":"مصدر البطارية","Screen and body":"الشاشة والهيكل","Screen origin":"مصدر الشاشة","Screen condition":"حالة الشاشة","Frame and body":"الإطار والهيكل","Faults and history":"الأعطال والسجل","Warranty and extras":"الضمان والملحقات","Warranty":"الضمان","Extras are added as a flat amount in MAD, not as a percentage.":"تُضاف الملحقات بمبلغ ثابت بالدرهم وليس بنسبة مئوية.","Estimated price":"السعر التقديري","Seller's asking price in MAD (optional)":"السعر الذي يطلبه البائع بالدرهم (اختياري)","e.g. 5500":"مثال: 5500","Copy summary":"نسخ الملخص","Reset form":"إعادة الضبط","Summary text":"نص الملخص","An estimate from asking prices and the percentages below, not a market quote. Check battery, Face ID and iCloud in person before paying.":"تقدير مبني على الأسعار المعروضة وعلى النسب أدناه، وليس سعر سوق مؤكدًا. افحص البطارية وFace ID وiCloud بنفسك قبل الدفع.","Estimate":"التقدير","See breakdown":"عرض التفصيل","Assumptions behind the percentages":"الافتراضات وراء النسب","What comes from the listings:":"ما يأتي من الإعلانات:","the base price of each model, read from the clean listings, and the bypass discount. Four bypassed units were priced about 35 to 45% under comparable clean ones. The chip under the model says how many listings the base price rests on.":"سعر الأساس لكل طراز، مقروءًا من الإعلانات النظيفة، وخصم التجاوز (bypass). كانت أربعة أجهزة متجاوَزة معروضة بأقل بنحو 35 إلى 45% من أجهزة نظيفة مماثلة. الشارة تحت الطراز تبيّن عدد الإعلانات التي يقوم عليها سعر الأساس.","What is my assumption:":"ما هو افتراض مني:","every other percentage. The listings give no reliable signal for Face ID faults, battery wear or cracked glass, because sellers price these inconsistently. Change any number and the receipt updates. Changes are kept in this browser.":"كل النسب الأخرى. لا تعطي الإعلانات إشارة موثوقة عن أعطال Face ID أو تآكل البطارية أو الزجاج المكسور لأن البائعين يسعّرونها بشكل غير متسق. غيّر أي رقم يتحدّث الإيصال. تُحفظ التغييرات في هذا المتصفح.","Restore default assumptions":"استعادة الافتراضات الأصلية","Base from several listings":"سعر الأساس من عدة إعلانات","Base from one listing":"سعر الأساس من إعلان واحد","Base is my estimate":"سعر الأساس تقدير مني","Listings seen:":"الإعلانات المرصودة:","Scaled to the base storage.":"مُعدَّل حسب السعة الأساسية.","Search-page price only, listing not opened.":"سعر صفحة البحث فقط، ولم يُفتح الإعلان.","Conflicts with nearby models. This is my estimate.":"يتعارض مع الطرازات المجاورة. هذا تقديري.","No listing found. My estimate.":"لم أجد إعلانًا. هذا تقديري.","Other listings were priced 0 MAD.":"الإعلانات الأخرى كانت بسعر 0 درهم.","Only defective, locked or 0 MAD listings. My estimate.":"إعلانات معطوبة أو مقفلة أو بسعر 0 درهم فقط. هذا تقديري.","The listing looks low. This is my estimate.":"سعر الإعلان يبدو منخفضًا. هذا تقديري.","Several had replaced parts.":"عدة أجهزة كانت بقطع مستبدلة.","No built-in price. Type the price of this exact model in perfect condition.":"لا يوجد سعر مدمج. اكتب سعر هذا الطراز بالضبط في حالة ممتازة.","Other iPhone (enter your own base price)":"iPhone آخر (أدخل سعر الأساس بنفسك)","Other iPad (enter your own base price)":"iPad آخر (أدخل سعر الأساس بنفسك)","Official, factory unlocked":"رسمي، غير مقفل من المصنع","Official, eSIM-only (US model)":"رسمي، eSIM فقط (طراز أمريكي)","Needs a Turbo SIM":"يحتاج Turbo SIM","Carrier locked":"مقفل على شركة الاتصالات","Bypass (Wi-Fi or iCloud)":"تجاوز (Wi-Fi أو iCloud)","MDM locked":"مقفل بـ MDM","iCloud locked":"مقفل بـ iCloud","Original battery":"بطارية أصلية","Replaced, Apple genuine":"استبدال أصلي من Apple","Replaced, aftermarket":"استبدال غير أصلي","Face ID works":"Face ID يعمل","Face ID not working":"Face ID لا يعمل","Touch ID works":"Touch ID يعمل","Touch ID not working":"Touch ID لا يعمل","Original screen":"شاشة أصلية","Replaced, aftermarket (60 Hz or lower quality)":"استبدال غير أصلي (60 هرتز أو جودة أقل)","No marks":"بلا علامات","Light scratches":"خدوش خفيفة","Deep scratches":"خدوش عميقة","Cracked, still works":"مكسورة وتعمل","Cracked, touch problems":"مكسورة ومشاكل في اللمس","Lines, dead pixels or burn-in":"خطوط أو بكسلات ميتة أو احتراق","Back glass intact":"الزجاج الخلفي سليم","Chips or hairline marks":"شظايا أو شروخ دقيقة","Cracked":"مكسور","Cracked, camera lens also broken":"مكسور وعدسة الكاميرا مكسورة أيضًا","Back straight":"الظهر مستقيم","Light dents":"انبعاجات خفيفة","Bent":"ملتوٍ","Clean":"نظيف","Light scuffs":"خدوش سطحية","Visible dents or scratches":"انبعاجات أو خدوش ظاهرة","Heavy dents or bent frame":"انبعاجات كبيرة أو إطار ملتوٍ","Camera broken, blurry or lens cracked":"الكاميرا معطلة أو ضبابية أو العدسة مشروخة","Flash or torch not working":"الفلاش أو المصباح لا يعمل","Speaker, mic or earpiece fault":"عطل في السماعة أو الميكروفون أو سماعة الأذن","Charging port fault":"عطل في منفذ الشحن","Wi-Fi or Bluetooth fault":"عطل في Wi-Fi أو Bluetooth","SIM or network not detected":"لا يتعرف على الشريحة أو الشبكة","A button does not work":"زر لا يعمل","Water damage history":"سبق أن تعرض للماء","Board repair or opened by a third party":"إصلاح اللوحة الأم أو فتحه طرف ثالث","No warranty":"بدون ضمان","Shop warranty, 1 to 3 months":"ضمان المحل من 1 إلى 3 أشهر","Shop warranty, 6 to 12 months":"ضمان المحل من 6 إلى 12 شهرًا","Apple warranty still running":"ضمان Apple ساري","Original box":"العلبة الأصلية","Original charger and cable":"الشاحن والكابل الأصليان","Case or screen protector":"غطاء أو واقي شاشة","Apple Pencil":"Apple Pencil","Keyboard folio":"غطاء لوحة مفاتيح","Lock status (share of the price kept)":"حالة القفل (نسبة السعر المحتفظ بها)","Back glass (iPhone)":"الزجاج الخلفي (iPhone)","Back (metal)":"الظهر (معدن)","Faults":"الأعطال","Warranty (adds to price)":"الضمان (يزيد السعر)","Extras (flat MAD)":"الملحقات (مبلغ ثابت بالدرهم)","Back glass":"الزجاج الخلفي","Back and frame":"الظهر والإطار","No change.":"لا تغيير.","Assumed 94%. eSIM-only phones are harder to sell locally.":"افتراض 94%. هواتف eSIM فقط يصعب بيعها محليًا.","Assumed 85%. The phone only works with an add-on SIM adapter.":"افتراض 85%. يعمل الهاتف فقط بمحوّل شريحة إضافي.","Assumed 75%. It only works on one network until unlocked.":"افتراض 75%. يعمل على شبكة واحدة فقط حتى يُفتح القفل.","Kept at 60%. Taken from the listings: bypassed units sat about 35 to 45% under comparable clean ones. A bypass can break after an update, and the device may be stolen.":"محتفظ بنسبة 60%. مأخوذة من الإعلانات: كانت الأجهزة المتجاوَزة أقل بنحو 35 إلى 45% من أجهزة نظيفة مماثلة. قد يتوقف التجاوز بعد تحديث، وقد يكون الجهاز مسروقًا.","Assumed 50%. A company or school profile controls the device and may lock it again.":"افتراض 50%. يتحكم ملف شركة أو مدرسة بالجهاز وقد يقفله من جديد.","Assumed 12%, which is parts value only. The device cannot be activated.":"افتراض 12%، أي قيمة القطع فقط. لا يمكن تنشيط الجهاز.","Base price, {x}":"سعر الأساس، {x}","Storage {x}":"السعة {x}","Wi-Fi + Cellular":"Wi-Fi + شبكة خلوية","Wi-Fi":"Wi-Fi","Clean, unlocked, working":"نظيف وغير مقفل ويعمل","Battery assumed 85% (not stated)":"البطارية مفترضة 85% (غير مذكورة)","Battery {n}%":"البطارية {n}%","Battery: {x}":"البطارية: {x}","Screen replaced, Apple genuine":"شاشة مستبدلة، أصلية من Apple","Screen replaced, aftermarket":"شاشة مستبدلة، غير أصلية","Screen: {x}":"الشاشة: {x}","Back: {x}":"الظهر: {x}","Body: {x}":"الهيكل: {x}","Cap on combined deductions ({n}%)":"سقف مجموع الخصومات ({n}%)","After condition":"بعد الحالة","Lock: {x} (keeps {n}%)":"القفل: {x} (يحتفظ بـ {n}%)","Minimum, parts value ({n}% of clean price)":"الحد الأدنى، قيمة القطع ({n}% من السعر النظيف)","Calculated total":"المجموع المحسوب","Not stated":"غير مذكور","(base)":"(الأساس)","Filled in from the listings for {gb} in clean condition. Overwrite it with the price you think this model sells for when clean, such as what the seller or similar listings ask. Defects are subtracted below.":"معبأ من الإعلانات لسعة {gb} في حالة نظيفة. استبدله بالسعر الذي تراه مناسبًا لهذا الطراز وهو نظيف، مثل سعر البائع أو إعلانات مشابهة. تُخصم العيوب أدناه.","Type the price of this exact model in perfect condition. Storage is not scaled.":"اكتب سعر هذا الطراز بالضبط في حالة ممتازة. لا تُعدَّل السعة.","edited, suggested {n}":"معدّل، المقترح {n}","suggested":"مقترح","Fair range {lo} to {hi} MAD":"النطاق المعقول: من {lo} إلى {hi} MAD","not stated (85% assumed)":"غير مذكورة (مفترض 85%)","inside the fair range":"ضمن النطاق المعقول","above the estimate":"أعلى من التقدير","below the estimate. Check why: a hidden fault, a lock or a typo":"أقل من التقدير. تحقق من السبب: عيب خفي أو قفل أو خطأ كتابي","Copied":"تم النسخ","Lock: {x}":"القفل: {x}","Battery: {a}, {b}":"البطارية: {a}، {b}","not stated":"غير مذكورة","Face ID: {x}":"Face ID: {x}","Touch ID: {x}":"Touch ID: {x}","works":"يعمل","not working":"لا يعمل","Screen: {a}, {b}":"الشاشة: {a}، {b}","Back: {a}; body: {b}":"الظهر: {a}؛ الهيكل: {b}","Faults: {x}":"الأعطال: {x}","Estimate: {a} MAD (range {lo} to {hi})":"التقدير: {a} MAD (النطاق من {lo} إلى {hi})","Global":"عام","Storage: price change per doubling":"السعة: تغيّر السعر عند كل مضاعفة","iPad cellular surcharge":"زيادة iPad بالشبكة الخلوية","Cap on combined deductions":"سقف مجموع الخصومات","Minimum price (share of clean price)":"الحد الأدنى للسعر (نسبة من السعر النظيف)","Fair range around the estimate":"النطاق المعقول حول التقدير","Battery curve (adjustment at each health level)":"منحنى البطارية (التعديل عند كل مستوى صحة)","At {n}% health":"عند صحة {n}%"});</script>
+<script>Object.assign(TR.fr, {"Cellular listings were converted to a Wi-Fi price with the 12% surcharge used on this page.":"Les annonces cellulaires ont été converties en prix Wi-Fi avec le supplément de 12 % utilisé sur cette page.","The only listing was posted 16 weeks ago and may be out of date.":"La seule annonce date de 16 semaines et peut être périmée.","The only listing had a cracked corner, so the clean price is worked back from it.":"La seule annonce avait un coin fissuré, le prix en bon état en est donc déduit.","Storage is not stated in the listing, so this base is approximate.":"Le stockage n’est pas indiqué dans l’annonce, ce prix de base est donc approximatif.","The clean listing includes a Magic Keyboard, and two bypass listings ask more than it, so this base is uncertain.":"L’annonce en bon état inclut un Magic Keyboard et deux annonces avec contournement demandent plus, ce prix de base est donc incertain.","The title shows 800 MAD but the seller text says 11 800 DH. The text price is used.":"Le titre affiche 800 MAD mais le texte du vendeur indique 11 800 DH. Le prix du texte est utilisé.","Set to 75%. Three iPad listings with MDM asked 73% or more of comparable unlocked ones. A company or school profile controls the device and may lock it again.":"Fixé à 75 %. Trois annonces iPad avec MDM demandaient au moins 73 % du prix d’appareils déverrouillés comparables. Un profil d’entreprise ou d’école contrôle l’appareil et peut le reverrouiller.","Kept at 60%. Taken from the listings: bypassed units sat roughly 20 to 55% under comparable ones (about 40% on average). A bypass can break after an update, and the device may be stolen.":"Conservé à 60 %. Tiré des annonces : les appareils contournés étaient environ 20 à 55 % sous des appareils comparables (environ 40 % en moyenne). Un contournement peut cesser de fonctionner après une mise à jour, et l’appareil peut être volé.","the base price of each model, read from the clean listings, and the bypass discount. Bypassed units were priced about 20 to 55% under comparable ones. The chip under the model says how many listings the base price rests on.":"le prix de base de chaque modèle, lu sur les annonces en bon état, et la décote du contournement. Les appareils contournés étaient affichés environ 20 à 55 % sous des appareils comparables. La pastille sous le modèle indique sur combien d’annonces repose le prix de base."});</script>
+<script>Object.assign(TR.ar, {"Cellular listings were converted to a Wi-Fi price with the 12% surcharge used on this page.":"حُوّلت إعلانات الشبكة الخلوية إلى سعر Wi-Fi بزيادة 12% المستخدمة في هذه الصفحة.","The only listing was posted 16 weeks ago and may be out of date.":"الإعلان الوحيد نُشر قبل 16 أسبوعًا وقد يكون قديمًا.","The only listing had a cracked corner, so the clean price is worked back from it.":"الإعلان الوحيد كان بزاوية مشروخة، لذلك حُسب السعر النظيف انطلاقًا منه.","Storage is not stated in the listing, so this base is approximate.":"السعة غير مذكورة في الإعلان، لذلك سعر الأساس تقريبي.","The clean listing includes a Magic Keyboard, and two bypass listings ask more than it, so this base is uncertain.":"الإعلان النظيف يتضمن Magic Keyboard، وإعلانان مع تجاوز يطلبان أكثر منه، لذلك سعر الأساس غير مؤكد.","The title shows 800 MAD but the seller text says 11 800 DH. The text price is used.":"العنوان يعرض 800 درهم لكن نص البائع يذكر 11 800 درهم. استُخدم سعر النص.","Set to 75%. Three iPad listings with MDM asked 73% or more of comparable unlocked ones. A company or school profile controls the device and may lock it again.":"مضبوط على 75%. ثلاثة إعلانات iPad مع MDM طلبت 73% أو أكثر من سعر أجهزة مماثلة غير مقفلة. يتحكم ملف شركة أو مدرسة بالجهاز وقد يقفله من جديد.","Kept at 60%. Taken from the listings: bypassed units sat roughly 20 to 55% under comparable ones (about 40% on average). A bypass can break after an update, and the device may be stolen.":"محتفظ بنسبة 60%. مأخوذة من الإعلانات: كانت الأجهزة المتجاوَزة أقل بنحو 20 إلى 55% من أجهزة مماثلة (حوالي 40% في المتوسط). قد يتوقف التجاوز بعد تحديث، وقد يكون الجهاز مسروقًا.","the base price of each model, read from the clean listings, and the bypass discount. Bypassed units were priced about 20 to 55% under comparable ones. The chip under the model says how many listings the base price rests on.":"سعر الأساس لكل طراز، مقروءًا من الإعلانات النظيفة، وخصم التجاوز (bypass). كانت الأجهزة المتجاوَزة معروضة بأقل بنحو 20 إلى 55% من أجهزة مماثلة. الشارة تحت الطراز تبيّن عدد الإعلانات التي يقوم عليها سعر الأساس."});</script>
+<script>Object.assign(TR.fr, {"The listings had 71 to 78% battery, so the base was raised to a 90% battery equivalent.":"Les annonces affichaient 71 à 78 % de batterie, le prix de base a donc été relevé à un équivalent de 90 %.","The listing includes accessories, so the clean price may be lower.":"L’annonce inclut des accessoires, le prix en bon état peut donc être plus bas.","The storage options for this model come from one source and were not checked against Apple.":"Les capacités de ce modèle viennent d’une seule source et n’ont pas été vérifiées auprès d’Apple.","Set to 80%. Five listings with MDM asked 65% to 99% of comparable ones that did not state a lock. A company or school profile controls the device and may lock it again.":"Fixé à 80 %. Cinq annonces avec MDM demandaient 65 à 99 % du prix d’annonces comparables sans verrouillage indiqué. Un profil d’entreprise ou d’école contrôle l’appareil et peut le reverrouiller.","Set to 35%. Locked iPhones were asked at 35% to 46% of comparable clean ones. Those are asking prices of unsold devices, and the device cannot be activated until it is bypassed.":"Fixé à 35 %. Les iPhone verrouillés étaient demandés à 35 à 46 % du prix d’iPhone propres comparables. Ce sont des prix demandés pour des appareils invendus, et l’appareil ne peut pas être activé tant qu’il n’est pas contourné."});</script>
+<script>Object.assign(TR.ar, {"The listings had 71 to 78% battery, so the base was raised to a 90% battery equivalent.":"كانت بطاريات الإعلانات بين 71 و78%، لذلك رُفع سعر الأساس إلى ما يعادل بطارية 90%.","The listing includes accessories, so the clean price may be lower.":"يتضمن الإعلان ملحقات، لذلك قد يكون السعر النظيف أقل.","The storage options for this model come from one source and were not checked against Apple.":"سعات هذا الطراز من مصدر واحد ولم تُقارن بما تعرضه Apple.","Set to 80%. Five listings with MDM asked 65% to 99% of comparable ones that did not state a lock. A company or school profile controls the device and may lock it again.":"مضبوط على 80%. طلبت خمسة إعلانات مع MDM ما بين 65% و99% من سعر إعلانات مماثلة لم تذكر قفلًا. يتحكم ملف شركة أو مدرسة بالجهاز وقد يقفله من جديد.","Set to 35%. Locked iPhones were asked at 35% to 46% of comparable clean ones. Those are asking prices of unsold devices, and the device cannot be activated until it is bypassed.":"مضبوط على 35%. عُرضت هواتف iPhone المقفلة بما بين 35% و46% من سعر هواتف نظيفة مماثلة. هذه أسعار مطلوبة لأجهزة لم تُبع، ولا يمكن تنشيط الجهاز حتى يُتجاوز القفل."});</script>
+<script>Object.assign(TR.fr, {"iCloud off, official and unlocked":"iCloud désactivé, officiel et débloqué","This model has an A11 or older chip, the group affected by the public checkm8 bootrom exploit. Bypass offers are more plausible for these models than for newer ones. A bypass is not Apple’s unlock and can fail after a restore or update.":"Ce modèle a une puce A11 ou plus ancienne, le groupe touché par l’exploit bootrom public checkm8. Les offres de contournement sont plus plausibles pour ces modèles que pour les plus récents. Un contournement n’est pas le déverrouillage d’Apple et peut cesser de fonctionner après une restauration ou une mise à jour.","This model has an A12 or newer chip, which the public checkm8 exploit does not cover. A bypass here relies on other methods. Ask the seller to show what still works after a restart, including SIM, calls and updates.":"Ce modèle a une puce A12 ou plus récente, que l’exploit public checkm8 ne couvre pas. Un contournement ici repose sur d’autres méthodes. Demandez au vendeur de montrer ce qui fonctionne encore après un redémarrage, y compris SIM, appels et mises à jour.","Activation Lock protects the original owner. A locked or bypassed device may be lost or stolen, so ask for proof of purchase.":"Le verrouillage d’activation protège le propriétaire d’origine. Un appareil verrouillé ou contourné peut avoir été perdu ou volé : demandez une preuve d’achat.","Not known (base size assumed)":"Inconnu (capacité de base supposée)","Storage not known":"Capacité inconnue"});</script>
+<script>Object.assign(TR.ar, {"iCloud off, official and unlocked":"iCloud معطّل، رسمي وغير مقفل","This model has an A11 or older chip, the group affected by the public checkm8 bootrom exploit. Bypass offers are more plausible for these models than for newer ones. A bypass is not Apple’s unlock and can fail after a restore or update.":"هذا الطراز بمعالج A11 أو أقدم، وهي المجموعة المتأثرة بثغرة checkm8 العلنية في bootrom. عروض التجاوز أكثر ترجيحًا لهذه الطرازات منها للأحدث. التجاوز ليس فتحًا رسميًا من Apple وقد يتوقف بعد استعادة النظام أو تحديثه.","This model has an A12 or newer chip, which the public checkm8 exploit does not cover. A bypass here relies on other methods. Ask the seller to show what still works after a restart, including SIM, calls and updates.":"هذا الطراز بمعالج A12 أو أحدث، ولا تشمله ثغرة checkm8 العلنية. التجاوز هنا يعتمد على طرق أخرى. اطلب من البائع أن يُظهر ما الذي يعمل بعد إعادة التشغيل، بما في ذلك الشريحة والمكالمات والتحديثات.","Activation Lock protects the original owner. A locked or bypassed device may be lost or stolen, so ask for proof of purchase.":"قفل التنشيط يحمي المالك الأصلي. قد يكون الجهاز المقفل أو المتجاوَز مفقودًا أو مسروقًا، لذلك اطلب إثبات الشراء.","Not known (base size assumed)":"غير معروفة (يُفترض حجم الأساس)","Storage not known":"السعة غير معروفة"});</script>
+<script>Object.assign(TR.fr, {"This model has an A12 or newer chip, which the public checkm8 exploit does not cover. Commercial bypass offers are reported for this model, but they depend on the iOS version, are often Wi-Fi only (no SIM or calls), and a restore or update can bring the lock back. Ask the seller which iOS version it runs and to show what still works after a restart.":"Ce modèle a une puce A12 ou plus récente, que l’exploit public checkm8 ne couvre pas. Des offres commerciales de contournement sont signalées pour ce modèle, mais elles dépendent de la version d’iOS, sont souvent limitées au Wi-Fi (sans SIM ni appels), et une restauration ou une mise à jour peut ramener le verrouillage. Demandez au vendeur quelle version d’iOS tourne et de montrer ce qui fonctionne encore après un redémarrage.","This model has a newer chip than any bypass offer I found reports for. A listing that claims a bypass here deserves extra doubt, so ask the seller for proof.":"Ce modèle a une puce plus récente que toutes celles pour lesquelles j’ai trouvé des offres de contournement. Une annonce qui prétend à un contournement ici mérite un doute supplémentaire : demandez une preuve au vendeur."});</script>
+<script>Object.assign(TR.ar, {"This model has an A12 or newer chip, which the public checkm8 exploit does not cover. Commercial bypass offers are reported for this model, but they depend on the iOS version, are often Wi-Fi only (no SIM or calls), and a restore or update can bring the lock back. Ask the seller which iOS version it runs and to show what still works after a restart.":"هذا الطراز بمعالج A12 أو أحدث، ولا تشمله ثغرة checkm8 العلنية. وردت تقارير عن عروض تجارية للتجاوز لهذا الطراز، لكنها تعتمد على إصدار iOS، وغالبًا ما تقتصر على Wi-Fi (بلا شريحة أو مكالمات)، وقد تعيد استعادة النظام أو تحديثه القفل من جديد. اسأل البائع عن إصدار iOS الذي يعمل وأن يُظهر ما الذي يعمل بعد إعادة التشغيل.","This model has a newer chip than any bypass offer I found reports for. A listing that claims a bypass here deserves extra doubt, so ask the seller for proof.":"هذا الطراز بمعالج أحدث من أي معالج وجدت له عروض تجاوز. الإعلان الذي يدّعي تجاوزًا هنا يستحق شكًا إضافيًا، لذلك اطلب من البائع دليلًا."});</script>
+<script>Object.assign(TR.fr, {"The previous owner is known and can be reached (from the seller’s sheet or the device record)":"Le propriétaire précédent est connu et joignable (d’après la fiche du vendeur ou le dossier de l’appareil)","Green: this lock can likely be bypassed":"Vert : ce verrouillage peut probablement être contourné","The chip is A11 or older, so bypass offers are more plausible. A bypass is not Apple’s unlock and can fail after a restore or update.":"La puce est A11 ou plus ancienne : les offres de contournement sont plus plausibles. Un contournement n’est pas le déverrouillage d’Apple et peut cesser après une restauration ou une mise à jour.","Green, with conditions: bypass offers are reported":"Vert, sous conditions : des offres de contournement sont signalées","It depends on the iOS version, is often Wi-Fi only (no SIM or calls), and a restore or update can bring the lock back. Ask for proof first.":"Cela dépend de la version d’iOS, c’est souvent limité au Wi-Fi (sans SIM ni appels), et une restauration ou une mise à jour peut ramener le verrouillage. Demandez d’abord une preuve.","Red: no bypass found for this model":"Rouge : aucun contournement trouvé pour ce modèle","No bypass offer is reported for this chip. Treat the device as parts only unless the owner removes the lock.":"Aucune offre de contournement n’est signalée pour cette puce. Considérez l’appareil comme des pièces, sauf si le propriétaire retire le verrouillage.","Red: bypass cannot be assumed":"Rouge : un contournement ne peut pas être supposé","Custom device: bypass is unknown. Treat it as parts only unless the owner removes the lock.":"Appareil personnalisé : le contournement est inconnu. Considérez-le comme des pièces, sauf si le propriétaire retire le verrouillage.","Yellow: the previous owner may remove the lock":"Jaune : le propriétaire précédent peut retirer le verrouillage","If the previous owner can be reached, they can remove the device from their Apple account, even if they forgot they sold it. Ask the seller for proof of the sale and the owner’s contact, and do not pay until the lock is removed.":"S’il est joignable, le propriétaire précédent peut retirer l’appareil de son compte Apple, même s’il a oublié l’avoir vendu. Demandez au vendeur la preuve de la vente et les coordonnées du propriétaire, et ne payez pas avant le retrait du verrouillage."});</script>
+<script>Object.assign(TR.ar, {"The previous owner is known and can be reached (from the seller’s sheet or the device record)":"المالك السابق معروف ويمكن الوصول إليه (من بطاقة البائع أو سجل الجهاز)","Green: this lock can likely be bypassed":"أخضر: يمكن على الأرجح تجاوز هذا القفل","The chip is A11 or older, so bypass offers are more plausible. A bypass is not Apple’s unlock and can fail after a restore or update.":"المعالج A11 أو أقدم، لذلك عروض التجاوز أكثر ترجيحًا. التجاوز ليس فتحًا رسميًا من Apple وقد يتوقف بعد استعادة النظام أو تحديثه.","Green, with conditions: bypass offers are reported":"أخضر بشروط: وردت تقارير عن عروض تجاوز","It depends on the iOS version, is often Wi-Fi only (no SIM or calls), and a restore or update can bring the lock back. Ask for proof first.":"يعتمد على إصدار iOS، وغالبًا ما يقتصر على Wi-Fi (بلا شريحة أو مكالمات)، وقد تعيد استعادة النظام أو تحديثه القفل. اطلب إثباتًا أولًا.","Red: no bypass found for this model":"أحمر: لم أجد تجاوزًا لهذا الطراز","No bypass offer is reported for this chip. Treat the device as parts only unless the owner removes the lock.":"لا توجد عروض تجاوز لهذا المعالج. اعتبر الجهاز قطع غيار ما لم يزل المالك القفل.","Red: bypass cannot be assumed":"أحمر: لا يمكن افتراض إمكانية التجاوز","Custom device: bypass is unknown. Treat it as parts only unless the owner removes the lock.":"جهاز مخصص: إمكانية التجاوز غير معروفة. اعتبره قطع غيار ما لم يزل المالك القفل.","Yellow: the previous owner may remove the lock":"أصفر: قد يتمكن المالك السابق من إزالة القفل","If the previous owner can be reached, they can remove the device from their Apple account, even if they forgot they sold it. Ask the seller for proof of the sale and the owner’s contact, and do not pay until the lock is removed.":"إذا أمكن الوصول إلى المالك السابق فبإمكانه إزالة الجهاز من حسابه في Apple حتى لو نسي أنه باعه. اطلب من البائع إثبات البيع ووسيلة الاتصال بالمالك، ولا تدفع قبل إزالة القفل."});</script>
+<script>Object.assign(TR.fr, {"A 64 GB listing at 2 000 MAD matches the scaled base. A 256 GB listing with a cracked top corner asked 1 200 MAD, which is not a clean price. One more listing was in USD and was not converted.":"Une annonce 64 Go à 2 000 MAD correspond au prix de base ajusté. Une annonce 256 Go avec un coin supérieur fissuré demandait 1 200 MAD, ce qui n’est pas un prix en bon état. Une autre annonce était en USD et n’a pas été convertie.","Ten listings, 32 GB at 1 000 and 128 GB at 1 200 to 1 600 MAD. Lock status is not stated on any of them. One with a touch fault asked 700. The 1 100 base is a middle value for 32 GB.":"Dix annonces : 32 Go à 1 000 et 128 Go de 1 200 à 1 600 MAD. Le verrouillage n’est indiqué dans aucune. Une annonce avec un défaut tactile demandait 700. La base de 1 100 est une valeur médiane pour 32 Go."});</script>
+<script>Object.assign(TR.ar, {"A 64 GB listing at 2 000 MAD matches the scaled base. A 256 GB listing with a cracked top corner asked 1 200 MAD, which is not a clean price. One more listing was in USD and was not converted.":"إعلان 64 جيجابايت بسعر 2 000 درهم يطابق السعر الأساسي بعد التعديل. إعلان 256 جيجابايت بزاوية علوية مشروخة طلب 1 200 درهم، وهو ليس سعر جهاز سليم. وكان هناك إعلان آخر بالدولار ولم يُحوَّل.","Ten listings, 32 GB at 1 000 and 128 GB at 1 200 to 1 600 MAD. Lock status is not stated on any of them. One with a touch fault asked 700. The 1 100 base is a middle value for 32 GB.":"عشرة إعلانات: 32 جيجابايت بسعر 1 000 و128 جيجابايت من 1 200 إلى 1 600 درهم. لا يذكر أي منها حالة القفل. إعلان به عطل في اللمس طلب 700. سعر الأساس 1 100 قيمة وسطى لسعة 32 جيجابايت."});</script>
+<script>Object.assign(TR.ar, {"Color theme":"لون التطبيق","Language":"اللغة","System":"بحال التيليفون","Light":"فاتح","Dark":"غامق","Marketplace Maroc · asking prices captured 19 Oct 2026 · MAD (DH)":"Marketplace المغرب · الأثمنة المطلوبة تجمعات نهار 19 أكتوبر 2026 · بالدرهم (DH)","Used iPhone & iPad price estimator":"شحال يسوى الآيفون والآيباد المستعمل","Pick the device, then describe what is wrong with it. Each lock, fault and repair moves the price by a percentage you can read in the receipt and change in the assumptions panel. The starting values below are an example.":"ختار الجهاز، ومن بعد قول شنو فيه من مشاكل. كل قفل ولا عطب ولا تصليحة كينقص من الثمن بنسبة كتبان ليك فالتفصيل، وتقدر تبدلها فالإعدادات. الأرقام اللي لتحت غير مثال.","Device":"الجهاز","Type":"النوع","Model":"الموديل","Storage":"الستوكاج","Connectivity":"الاتصال","Suggested base price in MAD":"الثمن الأساسي المقترح بالدرهم","Clean, original, unlocked, about 90% battery, everything working.":"نقي، أوريجينال، محلول، الباطري تقريبا 90%، وكلشي خدام.","Use suggested price":"رجع الثمن المقترح","Lock status":"واش مسدود ولا محلول","Battery and biometrics":"الباطري والبصمة","Battery health:":"صحة الباطري:","Battery health percent":"نسبة صحة الباطري","iPhone: Settings, Battery, Battery Health. An iPad may not show a percentage. If the seller gave none, tick Not stated and 85% is assumed.":"فالآيفون: Réglages، من بعد Batterie، من بعد État de la batterie. الآيباد ممكن ما يبينش النسبة. إلا البايع ما عطاكش النسبة، علّم على «ما مذكوراش» وغادي نحسبوها 85%.","Battery origin":"أصل الباطري","Screen and body":"الإيكران والهيكل","Screen origin":"أصل الإيكران","Screen condition":"حالة الإيكران","Frame and body":"الكادر والهيكل","Faults and history":"الأعطاب والتاريخ ديالو","Warranty and extras":"الگارانتي والأكسيسوارات","Warranty":"الگارانتي","Extras are added as a flat amount in MAD, not as a percentage.":"الأكسيسوارات كيتزادو بمبلغ ثابت بالدرهم، ماشي بنسبة.","Estimated price":"الثمن المقدّر","Seller's asking price in MAD (optional)":"الثمن اللي طالب البايع بالدرهم (إلا بغيتي)","e.g. 5500":"مثلا 5500","Copy summary":"كوبي الملخص","Reset form":"عاود من الأول","Summary text":"نص الملخص","An estimate from asking prices and the percentages below, not a market quote. Check battery, Face ID and iCloud in person before paying.":"هادا تقدير مبني على الأثمنة المطلوبة وعلى النسب اللي لتحت، ماشي ثمن السوق مضمون. شوف الباطري وFace ID وiCloud بعينيك قبل ما تخلص.","Estimate":"التقدير","See breakdown":"شوف التفصيل","Assumptions behind the percentages":"منين جات هاد النسب","What comes from the listings:":"شنو جا من الإعلانات:","the base price of each model, read from the clean listings, and the bypass discount. Four bypassed units were priced about 35 to 45% under comparable clean ones. The chip under the model says how many listings the base price rests on.":"الثمن الأساسي ديال كل موديل، مأخوذ من الإعلانات النقية، والنقص ديال البايباس. ربعة ديال الأجهزة فيهم بايباس كانو معروضين بأقل بشي 35 حتى 45% من أجهزة بحالهم نقيين. العلامة اللي تحت الموديل كتقولك شحال من إعلان مبني عليه الثمن الأساسي.","What is my assumption:":"شنو هو تخمين مني:","every other percentage. The listings give no reliable signal for Face ID faults, battery wear or cracked glass, because sellers price these inconsistently. Change any number and the receipt updates. Changes are kept in this browser.":"كاع النسب الأخرى. الإعلانات ما كتعطيش فكرة مضبوطة على عطب Face ID ولا تآكل الباطري ولا الزاج المهرّس، حيت البياعة كيحطو الثمن بلا قاعدة. بدل أي رقم والتفصيل يتبدل معاه. التبديلات كتبقى محفوظة فهاد التيليفون.","Restore default assumptions":"رجع النسب الأصلية","Base from several listings":"الثمن من بزاف ديال الإعلانات","Base from one listing":"الثمن من إعلان واحد","Base is my estimate":"الثمن تخمين مني","Listings seen:":"الإعلانات اللي تشافو:","Scaled to the base storage.":"محسوب على الستوكاج الأساسي.","Search-page price only, listing not opened.":"غير الثمن اللي فصفحة البحث، الإعلان ما تحلّش.","Conflicts with nearby models. This is my estimate.":"ما متافقش مع الموديلات اللي قراب ليه. هادا تخمين مني.","No listing found. My estimate.":"ما لقيت حتى إعلان. تخمين مني.","Other listings were priced 0 MAD.":"الإعلانات الأخرى كانو بـ 0 درهم.","Only defective, locked or 0 MAD listings. My estimate.":"غير إعلانات فيهم عطب، مسدودين ولا بـ 0 درهم. تخمين مني.","The listing looks low. This is my estimate.":"الإعلان باين رخيص بزاف. هادا تخمين مني.","Several had replaced parts.":"بزاف منهم مبدلين شي قطع.","No built-in price. Type the price of this exact model in perfect condition.":"ما كاينش ثمن جاهز. كتب الثمن ديال هاد الموديل بالضبط وهو نقي مية فالمية.","Other iPhone (enter your own base price)":"آيفون آخر (دخل الثمن الأساسي بيدك)","Other iPad (enter your own base price)":"آيباد آخر (دخل الثمن الأساسي بيدك)","Official, factory unlocked":"رسمي، محلول من المعمل","Official, eSIM-only (US model)":"رسمي، eSIM بوحدها (موديل ميريكاني)","Needs a Turbo SIM":"خاصو Turbo SIM","Carrier locked":"مسدود على أوبيراتور واحد","Bypass (Wi-Fi or iCloud)":"بايباس (Wi-Fi ولا iCloud)","MDM locked":"مسدود بـ MDM","iCloud locked":"مسدود بـ iCloud","Original battery":"باطري أوريجينال","Replaced, Apple genuine":"مبدّل، أوريجينال ديال Apple","Replaced, aftermarket":"مبدّل، ماشي أوريجينال","Face ID works":"Face ID خدام","Face ID not working":"Face ID ما خدامش","Touch ID works":"Touch ID خدام","Touch ID not working":"Touch ID ما خدامش","Original screen":"إيكران أوريجينال","Replaced, aftermarket (60 Hz or lower quality)":"مبدّل، ماشي أوريجينال (60 Hz ولا جودة قل)","No marks":"بلا حتى أثر","Light scratches":"خدوش خفاف","Deep scratches":"خدوش غارقين","Cracked, still works":"مهرّس وخدام","Cracked, touch problems":"مهرّس والتاتش فيه مشكل","Lines, dead pixels or burn-in":"فيه خطوط، نقط ميتين ولا محروق","Back glass intact":"الزاج اللور سالم","Chips or hairline marks":"شي تقشيرات ولا شقوق رقاق","Cracked":"مهرّس","Cracked, camera lens also broken":"مهرّس، وزاج الكاميرا حتى هو مهرّس","Back straight":"الظهر مستاقم","Light dents":"ضربات خفاف","Bent":"معووج","Clean":"نقي","Light scuffs":"خدوش سطحية خفاف","Visible dents or scratches":"ضربات ولا خدوش باينين","Heavy dents or bent frame":"ضربات كبار ولا الكادر معووج","Camera broken, blurry or lens cracked":"الكاميرا خاسرة، كتضبّب ولا الزاج ديالها مهرّس","Flash or torch not working":"الفلاش ولا الضو ما خدامش","Speaker, mic or earpiece fault":"مشكل فالبافل، الميكرو ولا سماعة المكالمة","Charging port fault":"مشكل فبلاصة الشارجور","Wi-Fi or Bluetooth fault":"مشكل فالـ Wi-Fi ولا Bluetooth","SIM or network not detected":"ما كيقراش لابيس ولا الريزو","A button does not work":"شي بوطونة ما خدامةش","Water damage history":"سبق دخل ليه الما","Board repair or opened by a third party":"تصلحات الكارط مير ولا تحل عند شي واحد","No warranty":"بلا گارانتي","Shop warranty, 1 to 3 months":"گارانتي ديال الحانوت، من 1 حتى 3 شهور","Shop warranty, 6 to 12 months":"گارانتي ديال الحانوت، من 6 حتى 12 شهر","Apple warranty still running":"گارانتي Apple باقا خدامة","Original box":"الكارطونة الأصلية","Original charger and cable":"الشارجور والكابل أوريجينال","Case or screen protector":"كوك ولا حماية ديال الإيكران","Apple Pencil":"Apple Pencil","Keyboard folio":"كوك فيه كلافيي","Lock status (share of the price kept)":"واش مسدود (شحال كيبقى من الثمن)","Back glass (iPhone)":"الزاج اللور (آيفون)","Back (metal)":"الظهر (حديد)","Faults":"الأعطاب","Warranty (adds to price)":"الگارانتي (كتزيد فالثمن)","Extras (flat MAD)":"الأكسيسوارات (مبلغ ثابت بالدرهم)","Back glass":"الزاج اللور","Back and frame":"الظهر والكادر","No change.":"ما كيتبدل والو.","Assumed 94%. eSIM-only phones are harder to sell locally.":"حسبناه 94%. التيليفونات اللي فيهم غير eSIM صعاب يتباعو هنا.","Assumed 85%. The phone only works with an add-on SIM adapter.":"حسبناه 85%. التيليفون ما كيخدمش غير بواحد الأداپتور ديال لابيس.","Assumed 75%. It only works on one network until unlocked.":"حسبناه 75%. كيخدم غير مع أوبيراتور واحد حتى يتحل.","Kept at 60%. Taken from the listings: bypassed units sat about 35 to 45% under comparable clean ones. A bypass can break after an update, and the device may be stolen.":"خليناه 60%. من الإعلانات: الأجهزة اللي فيهم بايباس كانو بأقل بشي 35 حتى 45% من أجهزة بحالهم نقيين. البايباس يقدر يطيح من بعد شي تحديث، والجهاز يقدر يكون مسروق.","Assumed 50%. A company or school profile controls the device and may lock it again.":"حسبناه 50%. شي شركة ولا مدرسة متحكمة فالجهاز وتقدر تسدو عاوتاني.","Assumed 12%, which is parts value only. The device cannot be activated.":"حسبناه 12%، يعني غير ثمن البياس. الجهاز ما يمكنش يتفعّل.","Base price, {x}":"الثمن الأساسي، {x}","Storage {x}":"الستوكاج {x}","Wi-Fi + Cellular":"Wi-Fi + لابيس","Wi-Fi":"Wi-Fi","Clean, unlocked, working":"نقي، محلول، خدام","Battery assumed 85% (not stated)":"الباطري محسوبة 85% (ما مذكوراش)","Battery {n}%":"الباطري {n}%","Battery: {x}":"الباطري: {x}","Screen replaced, Apple genuine":"الإيكران مبدّل، أوريجينال ديال Apple","Screen replaced, aftermarket":"الإيكران مبدّل، ماشي أوريجينال","Screen: {x}":"الإيكران: {x}","Back: {x}":"الظهر: {x}","Body: {x}":"الهيكل: {x}","Cap on combined deductions ({n}%)":"الحد ديال مجموع النقص ({n}%)","After condition":"من بعد الحالة","Lock: {x} (keeps {n}%)":"القفل: {x} (كيبقى {n}%)","Minimum, parts value ({n}% of clean price)":"أقل ثمن، ثمن البياس ({n}% من الثمن النقي)","Calculated total":"المجموع المحسوب","Not stated":"ما مذكوراش","(base)":"(الأساسي)","Filled in from the listings for {gb} in clean condition. Overwrite it with the price you think this model sells for when clean, such as what the seller or similar listings ask. Defects are subtracted below.":"عمّرناه من الإعلانات ديال {gb} وهو نقي. بدلو بالثمن اللي كتشوف هاد الموديل كيتباع بيه وهو نقي، بحال الثمن ديال البايع ولا إعلانات بحالو. العيوب كتنقص لتحت.","Type the price of this exact model in perfect condition. Storage is not scaled.":"كتب الثمن ديال هاد الموديل بالضبط وهو نقي مية فالمية. الستوكاج ما كيتحسبش.","edited, suggested {n}":"مبدّل، المقترح {n}","suggested":"مقترح","Fair range {lo} to {hi} MAD":"الثمن المعقول من {lo} حتى {hi} درهم","not stated (85% assumed)":"ما مذكوراش (حسبناها 85%)","inside the fair range":"داخل الثمن المعقول","above the estimate":"فوق التقدير","below the estimate. Check why: a hidden fault, a lock or a typo":"تحت التقدير. شوف علاش: شي عطب مخبّي، قفل ولا غلطة فالكتابة","Copied":"تنسخ","Lock: {x}":"القفل: {x}","Battery: {a}, {b}":"الباطري: {a}، {b}","not stated":"ما مذكوراش","Face ID: {x}":"Face ID: {x}","Touch ID: {x}":"Touch ID: {x}","works":"خدام","not working":"ما خدامش","Screen: {a}, {b}":"الإيكران: {a}، {b}","Back: {a}; body: {b}":"الظهر: {a}؛ الهيكل: {b}","Faults: {x}":"الأعطاب: {x}","Estimate: {a} MAD (range {lo} to {hi})":"التقدير: {a} درهم (من {lo} حتى {hi})","Global":"عام","Storage: price change per doubling":"الستوكاج: شحال كيزيد الثمن كل ما تضاعف","iPad cellular surcharge":"الزيادة ديال الآيباد اللي فيه لابيس","Cap on combined deductions":"الحد ديال مجموع النقص","Minimum price (share of clean price)":"أقل ثمن (نسبة من الثمن النقي)","Fair range around the estimate":"الهامش المعقول حدا التقدير","Battery curve (adjustment at each health level)":"منحنى الباطري (التبديل فكل نسبة)","At {n}% health":"فـ {n}%","Cellular listings were converted to a Wi-Fi price with the 12% surcharge used on this page.":"الإعلانات ديال لابيس رجعناهم لثمن Wi-Fi بنقص الزيادة ديال 12% اللي مستعملة هنا.","The only listing was posted 16 weeks ago and may be out of date.":"الإعلان الوحيد تحط هادي 16 سيمانة وممكن يكون قديم.","The only listing had a cracked corner, so the clean price is worked back from it.":"الإعلان الوحيد كانت فيه ركنة مهرّسة، داكشي علاش حسبنا منو الثمن النقي.","Storage is not stated in the listing, so this base is approximate.":"الستوكاج ما مذكورش فالإعلان، داكشي علاش الثمن الأساسي تقريبي.","The clean listing includes a Magic Keyboard, and two bypass listings ask more than it, so this base is uncertain.":"الإعلان النقي فيه Magic Keyboard، وجوج إعلانات فيهم بايباس طالبين كثر منو، داكشي علاش هاد الثمن ماشي مضمون.","The title shows 800 MAD but the seller text says 11 800 DH. The text price is used.":"العنوان فيه 800 درهم ولكن البايع كاتب 11 800 درهم فالنص. خدينا الثمن اللي فالنص.","Set to 75%. Three iPad listings with MDM asked 73% or more of comparable unlocked ones. A company or school profile controls the device and may lock it again.":"حطيناه 75%. تلاتة ديال الإعلانات ديال الآيباد فيهم MDM طالبين 73% ولا كثر من ثمن أجهزة بحالهم محلولين. شي شركة ولا مدرسة متحكمة فالجهاز وتقدر تسدو عاوتاني.","Kept at 60%. Taken from the listings: bypassed units sat roughly 20 to 55% under comparable ones (about 40% on average). A bypass can break after an update, and the device may be stolen.":"خليناه 60%. من الإعلانات: الأجهزة اللي فيهم بايباس كانو بأقل بشي 20 حتى 55% من أجهزة بحالهم (تقريبا 40% فالمعدل). البايباس يقدر يطيح من بعد شي تحديث، والجهاز يقدر يكون مسروق.","the base price of each model, read from the clean listings, and the bypass discount. Bypassed units were priced about 20 to 55% under comparable ones. The chip under the model says how many listings the base price rests on.":"الثمن الأساسي ديال كل موديل، مأخوذ من الإعلانات النقية، والنقص ديال البايباس. الأجهزة اللي فيهم بايباس كانو بأقل بشي 20 حتى 55% من أجهزة بحالهم. العلامة اللي تحت الموديل كتقولك شحال من إعلان مبني عليه الثمن الأساسي.","The listings had 71 to 78% battery, so the base was raised to a 90% battery equivalent.":"الإعلانات كانت الباطري فيهم بين 71 و78%، داكشي علاش طلعنا الثمن الأساسي بحال إلا كانت الباطري 90%.","The listing includes accessories, so the clean price may be lower.":"الإعلان فيه أكسيسوارات، يعني الثمن النقي ممكن يكون قل.","The storage options for this model come from one source and were not checked against Apple.":"الستوكاجات ديال هاد الموديل جاو من مصدر واحد وما تقارنوش مع Apple.","Set to 80%. Five listings with MDM asked 65% to 99% of comparable ones that did not state a lock. A company or school profile controls the device and may lock it again.":"حطيناه 80%. خمسة ديال الإعلانات فيهم MDM طالبين بين 65% و99% من ثمن إعلانات بحالهم ما ذكروش قفل. شي شركة ولا مدرسة متحكمة فالجهاز وتقدر تسدو عاوتاني.","Set to 35%. Locked iPhones were asked at 35% to 46% of comparable clean ones. Those are asking prices of unsold devices, and the device cannot be activated until it is bypassed.":"حطيناه 35%. الآيفونات المسدودين كانو مطلوبين بين 35% و46% من ثمن آيفونات بحالهم نقيين. هادو أثمنة مطلوبة ديال أجهزة ما تباعوش، والجهاز ما يتفعّلش حتى يتدار ليه بايباس.","iCloud off, official and unlocked":"iCloud محيّد، رسمي ومحلول","This model has an A11 or older chip, the group affected by the public checkm8 bootrom exploit. Bypass offers are more plausible for these models than for newer ones. A bypass is not Apple’s unlock and can fail after a restore or update.":"هاد الموديل فيه بروسيسور A11 ولا قدم، وهادي هي المجموعة اللي فيها الثغرة المعروفة checkm8 فالـ bootrom. البايباس كيخدم فهاد الموديلات كثر من الجداد. البايباس ماشي حلان رسمي من Apple ويقدر يطيح من بعد restore ولا تحديث.","This model has an A12 or newer chip, which the public checkm8 exploit does not cover. A bypass here relies on other methods. Ask the seller to show what still works after a restart, including SIM, calls and updates.":"هاد الموديل فيه بروسيسور A12 ولا جديد، والثغرة checkm8 ما كتشملوش. البايباس هنا كيعتمد على طرق أخرى. طلب من البايع يوريك شنو باقي خدام من بعد ما يطفي ويشعل، بحال لابيس والمكالمات والتحديثات.","Activation Lock protects the original owner. A locked or bypassed device may be lost or stolen, so ask for proof of purchase.":"قفل التفعيل كيحمي مول الجهاز الأصلي. الجهاز المسدود ولا اللي فيه بايباس يقدر يكون ضايع ولا مسروق، داكشي علاش طلب الفاكتورة ولا شي دليل على الشرا.","Not known (base size assumed)":"ما معروفش (حسبنا الستوكاج الأساسي)","Storage not known":"الستوكاج ما معروفش","This model has an A12 or newer chip, which the public checkm8 exploit does not cover. Commercial bypass offers are reported for this model, but they depend on the iOS version, are often Wi-Fi only (no SIM or calls), and a restore or update can bring the lock back. Ask the seller which iOS version it runs and to show what still works after a restart.":"هاد الموديل فيه بروسيسور A12 ولا جديد، والثغرة checkm8 ما كتشملوش. كاينين ناس كيبيعو البايباس لهاد الموديل، ولكن كيتعلق بنسخة iOS، وبزاف المرات كيخدم غير بالـ Wi-Fi (بلا لابيس بلا مكالمات)، والـ restore ولا التحديث يقدر يرجع القفل. سول البايع على نسخة iOS وطلب منو يوريك شنو باقي خدام من بعد ما يطفي ويشعل.","This model has a newer chip than any bypass offer I found reports for. A listing that claims a bypass here deserves extra doubt, so ask the seller for proof.":"هاد الموديل فيه بروسيسور جديد على أي بايباس لقيت عليه خبار. إلا شي إعلان قال فيه بايباس هنا، شك فيه مزيان وطلب من البايع يوريك الدليل.","The previous owner is known and can be reached (from the seller’s sheet or the device record)":"مول الجهاز الأول معروف ونقدرو نوصلو ليه (من الورقة ديال البايع ولا من السجل ديال الجهاز)","Green: this lock can likely be bypassed":"خضر: هاد القفل غالبا يتدار ليه بايباس","The chip is A11 or older, so bypass offers are more plausible. A bypass is not Apple’s unlock and can fail after a restore or update.":"البروسيسور A11 ولا قدم، يعني البايباس ممكن كثر. البايباس ماشي حلان رسمي من Apple ويقدر يطيح من بعد restore ولا تحديث.","Green, with conditions: bypass offers are reported":"خضر بشروط: كاينين اللي كيديرو بايباس","It depends on the iOS version, is often Wi-Fi only (no SIM or calls), and a restore or update can bring the lock back. Ask for proof first.":"كيتعلق بنسخة iOS، وبزاف المرات كيخدم غير بالـ Wi-Fi (بلا لابيس بلا مكالمات)، والـ restore ولا التحديث يقدر يرجع القفل. طلب الدليل قبل.","Red: no bypass found for this model":"حمر: ما لقيت حتى بايباس لهاد الموديل","No bypass offer is reported for this chip. Treat the device as parts only unless the owner removes the lock.":"ما كاين حتى بايباس معروف لهاد البروسيسور. حسب الجهاز غير بياس، إلا إلا مولاه حيّد القفل.","Red: bypass cannot be assumed":"حمر: ما نقدروش نقولو كاين بايباس","Custom device: bypass is unknown. Treat it as parts only unless the owner removes the lock.":"جهاز آخر: البايباس ما معروفش. حسبو غير بياس، إلا إلا مولاه حيّد القفل.","Yellow: the previous owner may remove the lock":"صفر: مول الجهاز الأول يقدر يحيّد القفل","If the previous owner can be reached, they can remove the device from their Apple account, even if they forgot they sold it. Ask the seller for proof of the sale and the owner’s contact, and do not pay until the lock is removed.":"إلا قدرتي توصل لمول الجهاز الأول، يقدر يحيّد الجهاز من الكونط Apple ديالو واخا يكون نسى بلي باعو. طلب من البايع دليل على البيعة والنمرة ديال مول الجهاز، وما تخلّص حتى يتحيّد القفل.","A 64 GB listing at 2 000 MAD matches the scaled base. A 256 GB listing with a cracked top corner asked 1 200 MAD, which is not a clean price. One more listing was in USD and was not converted.":"إعلان ديال 64 GB بـ 2 000 درهم كيوافق الثمن الأساسي من بعد الحساب. إعلان ديال 256 GB فيه ركنة لفوق مهرّسة طالب 1 200 درهم، وهادا ماشي ثمن ديال جهاز نقي. وكان إعلان آخر بالدولار وما حسبناهش.","Ten listings, 32 GB at 1 000 and 128 GB at 1 200 to 1 600 MAD. Lock status is not stated on any of them. One with a touch fault asked 700. The 1 100 base is a middle value for 32 GB.":"عشرة ديال الإعلانات: 32 GB بـ 1 000 و128 GB من 1 200 حتى 1 600 درهم. حتى واحد ما ذكر واش مسدود. واحد فيه مشكل فالتاتش طالب 700. الثمن الأساسي 1 100 هو الوسط ديال 32 GB.","Data sharing":"مشاركة المعلومات","Welcome":"مرحبا بيك","Before you start, choose what this app may do. You can change any answer later in Data sharing, at the bottom of the page.":"قبل ما تبدا، ختار شنو يقدر يدير التطبيق. تقدر تبدل أي جواب من بعد فـ «مشاركة المعلومات» لتحت فالصفحة.","Share the prices I check":"نشارك الأثمنة اللي كنشوف","When you type a seller's asking price, that price and the device details are sent anonymously to improve the estimates.":"ملي كتكتب الثمن اللي طالب البايع، كيتصيفط هاد الثمن مع المعلومات ديال الجهاز بلا سمية، باش التقديرات يوليو مضبوطين كثر.","Share my purchases and sales":"نشارك الشرا والبيع ديالي","When you record a purchase or sale, its final price and the device details are sent anonymously. Real deal prices are the most useful data.":"ملي كتسجل شي شرية ولا بيعة، كيتصيفط الثمن الأخير مع المعلومات ديال الجهاز بلا سمية. الأثمنة الحقيقية هوما أحسن معلومة.","Ask me later if I made the deal":"سولني من بعد واش درت البيعة","When you reopen the app, it can ask whether you bought or sold a device you checked, and for how much.":"ملي ترجع تحل التطبيق، يقدر يسولك واش شريتي ولا بعتي شي جهاز شفتيه، وبشحال.","Download price updates":"نجيب الأثمنة الجداد","When online, the app checks for a newer price list. Nothing about you is sent.":"ملي تكون عندك الأنترنيت، التطبيق كيشوف واش كاينة ليستة ديال الأثمنة جديدة. ما كيتصيفط والو عليك.","Adjust estimates to my own deals":"نقاد التقدير على حساب البيع والشرا ديالي","The app compares your recorded deals with its estimates and adjusts future estimates for you. This stays on this phone.":"التطبيق كيقارن البيع والشرا اللي سجلتي مع التقديرات ديالو وكيقاد التقديرات الجاية على قدك. هادشي كيبقى فهاد التيليفون.","Yes":"إيه","No":"لا","Never collected: your name, phone number, contacts, location, photos or IMEI. Each install gets a random code so you can delete your data later.":"ما كيتجمع أبدا: سميتك، النمرة ديالك، الكونطاكتات، فين كاين، التصاور ولا IMEI. كل تيليفون كياخد كود عشوائي باش تقدر تمسح المعلومات ديالك من بعد.","Answer each question to continue.":"جاوب على كل سؤال باش تكمّل.","Continue":"كمّل","Record a deal":"سجّل بيعة ولا شرية","I bought it":"شريتو","I sold it":"بعتو","Final price in MAD":"الثمن الأخير بالدرهم","Save deal":"سجّل","Deal saved and sent.":"تسجلات وتصيفطات.","Deal saved. It will be sent when you are online.":"تسجلات. غادي تتصيفط ملي تكون عندك الأنترنيت.","Deal saved on this phone only.":"تسجلات غير فهاد التيليفون.","Type the final price first.":"كتب الثمن الأخير عاد.","Did you make the deal?":"واش درتي البيعة؟","You checked {x}, asked at {n} MAD.":"شفتي {x}، كان طالب فيه {n} درهم.","No deal":"ما درت والو","Later":"من بعد","Adjustment from your deals ({n})":"تقاد على حساب البيع ديالك ({n})","Built-in prices from 19 Oct 2026":"الأثمنة الأصلية ديال 19 أكتوبر 2026","Price list version {v}, from {d}":"ليستة الأثمنة نسخة {v}، ديال {d}","Waiting to send: {n}. Sent: {m}.":"باقي ما تصيفطوش: {n}. تصيفطو: {m}.","No server is set up yet, so records stay on this phone.":"مازال ما كاينش سيرفور، داكشي علاش المعلومات كيبقاو فهاد التيليفون.","Send now":"صيفط دابا","Check for new prices":"شوف واش كاينين أثمنة جداد","Prices updated to version {v}.":"الأثمنة تبدلو للنسخة {v}.","Prices are up to date.":"الأثمنة جداد.","Could not reach the server. Try again when online.":"ما قدرناش نوصلو للسيرفور. عاود ملي تكون عندك الأنترنيت.","Delete my data":"مسح المعلومات ديالي","Delete the data you shared from the server and this phone?":"نمسحو المعلومات اللي شاركتي من السيرفور ومن هاد التيليفون؟","Your data was deleted.":"المعلومات ديالك تمسحو.","Install code: {c}":"الكود ديالك: {c}","Prices updated {d}":"الأثمنة تجددو {d}","Sent.":"تصيفط.","Share":"شارك","New version {v} is available.":"كاينة نسخة جديدة {v}.","Download":"تيليشارجي"});
+Object.assign(TR.fr, {"Data sharing":"Partage des données","Welcome":"Bienvenue","Before you start, choose what this app may do. You can change any answer later in Data sharing, at the bottom of the page.":"Avant de commencer, choisissez ce que l’application peut faire. Vous pourrez changer chaque réponse plus tard dans « Partage des données », en bas de la page.","Share the prices I check":"Partager les prix que je vérifie","When you type a seller's asking price, that price and the device details are sent anonymously to improve the estimates.":"Quand vous saisissez le prix demandé par un vendeur, ce prix et les détails de l’appareil sont envoyés anonymement pour améliorer les estimations.","Share my purchases and sales":"Partager mes achats et ventes","When you record a purchase or sale, its final price and the device details are sent anonymously. Real deal prices are the most useful data.":"Quand vous enregistrez un achat ou une vente, le prix final et les détails de l’appareil sont envoyés anonymement. Les prix réels sont les données les plus utiles.","Ask me later if I made the deal":"Me demander plus tard si j’ai conclu","When you reopen the app, it can ask whether you bought or sold a device you checked, and for how much.":"À la réouverture, l’application peut vous demander si vous avez acheté ou vendu un appareil vérifié, et à quel prix.","Download price updates":"Télécharger les mises à jour des prix","When online, the app checks for a newer price list. Nothing about you is sent.":"En ligne, l’application vérifie s’il existe une liste de prix plus récente. Rien sur vous n’est envoyé.","Adjust estimates to my own deals":"Adapter les estimations à mes propres affaires","The app compares your recorded deals with its estimates and adjusts future estimates for you. This stays on this phone.":"L’application compare vos affaires enregistrées à ses estimations et ajuste les suivantes pour vous. Cela reste sur ce téléphone.","Yes":"Oui","No":"Non","Never collected: your name, phone number, contacts, location, photos or IMEI. Each install gets a random code so you can delete your data later.":"Jamais collecté : votre nom, numéro, contacts, position, photos ou IMEI. Chaque installation reçoit un code aléatoire pour que vous puissiez supprimer vos données plus tard.","Answer each question to continue.":"Répondez à chaque question pour continuer.","Continue":"Continuer","Record a deal":"Enregistrer une affaire","I bought it":"Je l’ai acheté","I sold it":"Je l’ai vendu","Final price in MAD":"Prix final en MAD","Save deal":"Enregistrer","Deal saved and sent.":"Affaire enregistrée et envoyée.","Deal saved. It will be sent when you are online.":"Affaire enregistrée. Elle sera envoyée dès que vous serez en ligne.","Deal saved on this phone only.":"Affaire enregistrée sur ce téléphone uniquement.","Type the final price first.":"Saisissez d’abord le prix final.","Did you make the deal?":"Avez-vous conclu l’affaire ?","You checked {x}, asked at {n} MAD.":"Vous avez vérifié {x}, demandé à {n} MAD.","No deal":"Pas d’affaire","Later":"Plus tard","Adjustment from your deals ({n})":"Ajustement selon vos affaires ({n})","Built-in prices from 19 Oct 2026":"Prix intégrés du 19 oct. 2026","Price list version {v}, from {d}":"Liste de prix version {v}, du {d}","Waiting to send: {n}. Sent: {m}.":"En attente d’envoi : {n}. Envoyés : {m}.","No server is set up yet, so records stay on this phone.":"Aucun serveur n’est encore configuré, les données restent sur ce téléphone.","Send now":"Envoyer maintenant","Check for new prices":"Vérifier les nouveaux prix","Prices updated to version {v}.":"Prix mis à jour en version {v}.","Prices are up to date.":"Les prix sont à jour.","Could not reach the server. Try again when online.":"Serveur injoignable. Réessayez une fois en ligne.","Delete my data":"Supprimer mes données","Delete the data you shared from the server and this phone?":"Supprimer les données partagées du serveur et de ce téléphone ?","Your data was deleted.":"Vos données ont été supprimées.","Install code: {c}":"Code d’installation : {c}","Prices updated {d}":"Prix mis à jour le {d}","Sent.":"Envoyé.","Share":"Partager","New version {v} is available.":"Nouvelle version {v} disponible.","Download":"Télécharger"});</script>
+<script>
+/* ---------- data ---------- */
+const NF = ' ';
+const fmt = n => { const s = Math.abs(Math.round(n)).toString().replace(/\B(?=(\d{3})+(?!\d))/g, NF); return (n < 0 && Math.round(n) !== 0 ? '−' : '') + s; };
+const sgn = n => (Math.round(n) > 0 ? '+' : '') + fmt(n);
+const gbLabel = g => g >= 1024 ? (g / 1024) + ' TB' : g + ' GB';
+let LANG = 'en';
+const lf = s => s.charAt(0).toLowerCase() + s.slice(1);
+const t = (s, p) => { let r = (LANG !== 'en' && window.TR && TR[LANG] && TR[LANG][s]) || s; if(p) for(const k in p) r = r.split('{' + k + '}').join(p[k]); return r; };
+const mapT = o => { const r = Array.isArray(o) ? [] : {}; for(const k in o) r[k] = (typeof o[k] === 'object') ? mapT(o[k]) : t(o[k]); return r; };
+const P = (id,name,bio,back,baseGB,st,base,src,note) => ({id,name,type:'phone',bio,back,baseGB,st,base,src,note});
+const T = (id,name,bio,baseGB,st,base,src,note) => ({id,name,type:'tablet',bio,back:'metal',baseGB,st,base,src,note});
+const MODELS = [
+ P('i18pm','iPhone 18 Pro Max','face','glass',256,[256,512,1024,2048],18500,'L','One listing at 21 000 MAD for 512 GB, scaled down to 256 GB.'),
+ P('i18p','iPhone 18 Pro','face','glass',256,[256,512,1024,2048],16800,'L','Four listings between 16 000 and 18 500 MAD.'),
+ P('i17pm','iPhone 17 Pro Max','face','glass',256,[256,512,1024,2048],11800,'T',''),
+ P('i17p','iPhone 17 Pro','face','glass',256,[256,512,1024],9000,'E','One listing at 7 000 MAD conflicts with the 17 Pro Max price. This is my estimate.'),
+ P('i17','iPhone 17','face','glass',256,[256,512],7800,'L',''),
+ P('iph_air','iPhone Air','face','glass',256,[256,512,1024],7200,'T',''),
+ P('i17e','iPhone 17e','face','glass',256,[256,512],5800,'T',''),
+ P('i16pm','iPhone 16 Pro Max','face','glass',256,[256,512,1024],8300,'L','Listings at 8 700 and 8 300 MAD.'),
+ P('i16p','iPhone 16 Pro','face','glass',128,[128,256,512,1024],6800,'T','One listing, 6 300 MAD at 92% battery.'),
+ P('i16pl','iPhone 16 Plus','face','glass',128,[128,256,512],6400,'E','One listing at 7 700 MAD is higher than the 16 Pro. This is my estimate.'),
+ P('i16','iPhone 16','face','glass',128,[128,256,512],5400,'E','No listing found. My estimate.'),
+ P('i16e','iPhone 16e','face','glass',128,[128,256,512],4400,'T','One listing at 4 400 MAD. The other two were priced 0 MAD.'),
+ P('i15pm','iPhone 15 Pro Max','face','glass',256,[256,512,1024],7100,'L',''),
+ P('i15p','iPhone 15 Pro','face','glass',128,[128,256,512,1024],6100,'L','Listings at 6 200 and 6 500 MAD.'),
+ P('i15pl','iPhone 15 Plus','face','glass',128,[128,256,512],5700,'T','Search-page price only (5 700 MAD). The listing was not opened.'),
+ P('i15','iPhone 15','face','glass',128,[128,256,512],4800,'E','No listing found. My estimate.'),
+ P('i14pm','iPhone 14 Pro Max','face','glass',128,[128,256,512,1024],5600,'L','Listings between 5 000 and 6 000 MAD at 256 GB, scaled to 128 GB.'),
+ P('i14p','iPhone 14 Pro','face','glass',128,[128,256,512,1024],5300,'E','No listing found. My estimate.'),
+ P('i14pl','iPhone 14 Plus','face','glass',128,[128,256,512],3800,'E','Only bypassed or 0 MAD listings. My estimate.'),
+ P('i14','iPhone 14','face','glass',128,[128,256,512],3200,'L','Two listings at 3 200 MAD.'),
+ P('i13pm','iPhone 13 Pro Max','face','glass',128,[128,256,512,1024],4700,'L','Listings between 3 000 and 5 700 MAD, several with replaced parts.'),
+ P('i13p','iPhone 13 Pro','face','glass',128,[128,256,512,1024],4200,'E','No listing found. My estimate.'),
+ P('i13','iPhone 13','face','glass',128,[128,256,512],2800,'T','One listing at 2 700 MAD.'),
+ P('i13m','iPhone 13 mini','face','glass',128,[128,256,512],2300,'L',''),
+ P('i12pm','iPhone 12 Pro Max','face','glass',128,[128,256,512],3800,'L','Listings between 3 500 and 4 000 MAD.'),
+ P('i12p','iPhone 12 Pro','face','glass',128,[128,256,512],3000,'L','Listings between 2 400 and 3 300 MAD.'),
+ P('i12','iPhone 12','face','glass',128,[64,128,256],2400,'T','One listing, 2 200 MAD at 75% battery.'),
+ P('i12m','iPhone 12 mini','face','glass',64,[64,128,256],1900,'E',''),
+ P('i11pm','iPhone 11 Pro Max','face','glass',64,[64,256,512],1800,'T','One listing, 1 900 MAD at 256 GB and 76% battery.'),
+ P('i11p','iPhone 11 Pro','face','glass',64,[64,256,512],1700,'T','One listing at 1 700 MAD.'),
+ P('i11','iPhone 11','face','glass',64,[64,128,256],1500,'L','Several listings between 1 400 and 1 700 MAD.'),
+ P('ise22','iPhone SE (2022)','touch','glass',64,[64,128,256],1300,'E','One listing at 850 MAD looks low. This is my estimate.'),
+ P('ise20','iPhone SE (2020)','touch','glass',64,[64,128,256],1150,'L','Two listings at 1 100 and 1 200 MAD.'),
+ P('ixsm','iPhone XS Max','face','glass',64,[64,256,512],1200,'E','Only defective or 0 MAD listings. My estimate.'),
+ P('ixs','iPhone XS','face','glass',64,[64,256,512],950,'L','Listings at 800 MAD (50% battery, Face ID off) and 1 100 MAD.'),
+ P('ixr','iPhone XR','face','glass',64,[64,128,256],1100,'L','Several listings between 850 and 1 500 MAD.'),
+ P('ix','iPhone X','face','glass',64,[64,256],1200,'L','Listings between 1 100 and 1 250 MAD.'),
+ P('i8p','iPhone 8 Plus','touch','glass',64,[64,128,256],1000,'E',''),
+ P('i8','iPhone 8','touch','glass',64,[64,128,256],850,'T','One listing, 850 MAD at 71% battery.'),
+ P('i7p','iPhone 7 Plus','touch','metal',32,[32,128,256],600,'T','One listing at 600 MAD.'),
+ P('i7','iPhone 7','touch','metal',32,[32,128,256],500,'T','One listing at 500 MAD.'),
+ P('i6s','iPhone 6s','touch','metal',32,[16,32,64,128],700,'T','One listing at 700 MAD.'),
+ {id:'cphone',name:'Other iPhone (enter your own base price)',type:'phone',bio:'face',back:'glass',custom:true,base:2000,src:'E',note:'No built-in price. Type the price of this exact model in perfect condition.'},
+ T('ip13m5','iPad Pro 13″ (M5)','face',256,[256,512,1024,2048],11600,'T',''),
+ T('ip11m5','iPad Pro 11″ (M5)','face',256,[256,512,1024,2048],10000,'T',''),
+ T('ipm4','iPad Pro 13″ (M4)','face',256,[256,512,1024,2048],8800,'L',''),
+ T('ipm2','iPad Pro 12.9″ (M2)','face',128,[128,256,512,1024,2048],6000,'T',''),
+ T('ip129g5','iPad Pro 12.9″ (5th gen, M1)','face',1024,[128,256,512,1024,2048],7500,'T',''),
+ T('ip129g4','iPad Pro 12.9″ (4th gen)','face',128,[128,256,512,1024],4700,'T',''),
+ T('ip129g3','iPad Pro 12.9″ (3rd gen)','face',256,[64,256,512,1024],3300,'T',''),
+ T('ip129g2','iPad Pro 12.9″ (2nd gen)','touch',64,[64,256,512],2700,'T',''),
+ T('ip11m4','iPad Pro 11″ (M4)','face',256,[256,512,1024,2048],7900,'T',''),
+ T('ip11m2','iPad Pro 11″ (M2)','face',256,[128,256,512,1024,2048],6100,'T',''),
+ T('ip11m1','iPad Pro 11″ (M1)','face',128,[128,256,512,1024,2048],4100,'T',''),
+ T('ip112020','iPad Pro 11″ (2020)','face',128,[128,256,512,1024],3700,'L',''),
+ T('ip112018','iPad Pro 11″ (2018)','face',64,[64,256,512,1024],2700,'L',''),
+ T('iair_m4_13','iPad Air 13″ (M4)','touch',128,[128,256,512,1024],9500,'T',''),
+ T('iair7_13','iPad Air 13″ (M3)','touch',128,[128,256,512,1024],7100,'T',''),
+ T('iair7_11','iPad Air 11″ (M3)','touch',128,[128,256,512,1024],7000,'T',''),
+ T('iair6_13','iPad Air 13″ (M2)','touch',128,[128,256,512,1024],6500,'T',''),
+ T('iair6_11','iPad Air 11″ (M2)','touch',128,[128,256,512,1024],4700,'T',''),
+ T('iair5','iPad Air 5 (M1)','touch',64,[64,256],3800,'L',''),
+ T('iair4','iPad Air 4','touch',64,[64,256],2800,'L',''),
+ T('iair3','iPad Air 3','touch',256,[64,256],2300,'L',''),
+ T('iair2','iPad Air 2','touch',64,[16,64,128],1200,'T',''),
+ T('iair1','iPad Air 1','none',32,[16,32,64,128],550,'T',''),
+ T('ia16','iPad (A16)','touch',128,[128,256,512],4500,'L',''),
+ T('i10','iPad (10th gen)','touch',64,[64,256],3000,'T',''),
+ T('i9','iPad (9th gen)','touch',64,[64,256],2300,'L',''),
+ T('i8t','iPad (8th gen)','touch',32,[32,128],1800,'T',''),
+ T('i7t','iPad (7th gen)','touch',128,[32,128],1500,'T',''),
+ T('i6t','iPad (6th gen)','touch',32,[32,128],1100,'L',''),
+ T('i5t','iPad (5th gen)','touch',32,[32,128],925,'L',''),
+ T('i3t','iPad (3rd gen)','none',16,[16,32,64],400,'T',''),
+ T('i4','iPad (4th gen)','none',16,[16,32,64,128],450,'E',''),
+ T('imini6','iPad mini 6','touch',256,[64,256],3500,'T',''),
+ T('imini5','iPad mini 5','touch',64,[64,256],1650,'T',''),
+ T('imini2','iPad mini 2','none',32,[16,32,64,128],300,'T',''),
+ T('i2','iPad 2','none',16,[16,32,64],300,'T',''),
+ {id:'ctab',name:'Other iPad (enter your own base price)',type:'tablet',bio:'face',back:'metal',custom:true,base:3000,src:'E',note:''}
+];
+const SRC = {L:'Base from several listings', T:'Base from one listing', E:'Base is my estimate'};
+const FLAGS = {scaled:'Scaled to the base storage.',search:'Search-page price only, listing not opened.',conflict:'Conflicts with nearby models. This is my estimate.',none:'No listing found. My estimate.',zero:'Other listings were priced 0 MAD.',defects:'Only defective, locked or 0 MAD listings. My estimate.',low:'The listing looks low. This is my estimate.',repaired:'Several had replaced parts.',custom:'No built-in price. Type the price of this exact model in perfect condition.',
+ cell:'Cellular listings were converted to a Wi-Fi price with the 12% surcharge used on this page.',
+ stale:'The only listing was posted 16 weeks ago and may be out of date.',
+ crack:'The only listing had a cracked corner, so the clean price is worked back from it.',
+ nostor:'Storage is not stated in the listing, so this base is approximate.',
+ kbdmix:'The clean listing includes a Magic Keyboard, and two bypass listings ask more than it, so this base is uncertain.',
+ priceconf:'The title shows 800 MAD but the seller text says 11 800 DH. The text price is used.',
+ air3mix:'A 64 GB listing at 2 000 MAD matches the scaled base. A 256 GB listing with a cracked top corner asked 1 200 MAD, which is not a clean price. One more listing was in USD and was not converted.',
+ i6mix:'Ten listings, 32 GB at 1 000 and 128 GB at 1 200 to 1 600 MAD. Lock status is not stated on any of them. One with a touch fault asked 700. The 1 100 base is a middle value for 32 GB.',
+ lowbat:'The listings had 71 to 78% battery, so the base was raised to a 90% battery equivalent.',
+ bundle:'The listing includes accessories, so the clean price may be lower.',
+ single:'The storage options for this model come from one source and were not checked against Apple.'};
+const OLDCHIP = new Set(['i8p','i8','ix','i7p','i7','i6s','iair1','iair2','ip129g2','i2','i3t','i4','i5t','i6t','i7t','imini2']);
+const BYPASS_OLD = 'This model has an A11 or older chip, the group affected by the public checkm8 bootrom exploit. Bypass offers are more plausible for these models than for newer ones. A bypass is not Apple\u2019s unlock and can fail after a restore or update.';
+const BYPASS_NEW = 'This model has an A12 or newer chip, which the public checkm8 exploit does not cover. Commercial bypass offers are reported for this model, but they depend on the iOS version, are often Wi-Fi only (no SIM or calls), and a restore or update can bring the lock back. Ask the seller which iOS version it runs and to show what still works after a restart.';
+const BYPASS_NONE = 'This model has a newer chip than any bypass offer I found reports for. A listing that claims a bypass here deserves extra doubt, so ask the seller for proof.';
+const BYPASS_REPORTED = new Set(['ixr','ixs','ixsm','i11','i11p','i11pm','ise20','i12m','i12','i12p','i12pm','i13m','i13','i13p','i13pm','ise22','i14','i14pl','i14p','i14pm','i15','i15pl','i15p','i15pm','i8t','imini5','i9','i10','imini6','iair3','iair4','iair5','iair6_11','iair6_13','ip112018','ip112020','ip129g3','ip129g4','ip11m1','ip129g5','ip11m2','ipm2']);
+const LOCK_WARN = 'Activation Lock protects the original owner. A locked or bypassed device may be lost or stolen, so ask for proof of purchase.';
+const NOTES = {
+ i18pm:[[18500,21000],'scaled'], i18p:[[14500,16000,16800,17200,18500]], i17pm:[[11800],'priceconf'], i17p:[[7000],'conflict'], i16pm:[[8300,8700]], i16p:[[6300]], i16pl:[[7700],'conflict'], i16:[[],'none'], i16e:[[4400],'zero'],
+ i15pm:[[5800,6300,7100],'repaired'], i15p:[[6200,6500]], i15pl:[[5700],'search'], i15:[[],'none'], i14pm:[[5000,5500,6000],'scaled'], i14p:[[],'none'], i14pl:[[],'defects'], i14:[[3200,3200]],
+ i13pm:[[3000,4000,5700],'repaired'], i13p:[[],'none'], i13:[[2700]], i12pm:[[3500,3600,4000]], i12p:[[2400,2700,3300]], i12:[[2200]], i11pm:[[1900],'scaled'], i11p:[[1700]], i11:[[1400,1600,1700]],
+ ise22:[[850],'low'], ise20:[[1100,1200]], ixsm:[[],'defects'], ixs:[[800,1100]], ixr:[[850,1000,1200,1500]], ix:[[1100,1200,1250]], i8:[[850]], i7p:[[600]], i7:[[500]], i6s:[[700]], cphone:[[],'custom'],
+ ipm4:[[7500,10000,12100]], ipm2:[[6900],'scaled'], ip11m1:[[4100],'nostor'], ip112020:[[4200,4800],['scaled','cell']], ip129g2:[[3100],'scaled'], ia16:[[4200,4600,4800,5200]], iair5:[[4300,6000]], i10:[[3000]], i9:[[2100,2500]],
+ i8t:[[1800]], i6t:[[700,1000,1100,1200,1250,1600],'i6mix'], imini5:[[1900],'scaled'], iair2:[[1300],'scaled'], i4:[[350],'defects'], imini2:[[300]], i2:[[299]], ctab:[[],'custom'],
+ iair1:[[500],['crack','cell']], iair3:[[1200,2000,2600],['cell','stale','air3mix']], iair4:[[2800,2800]], iair6_11:[[4700]], iair6_13:[[6500],'nostor'],
+ i7t:[[1499]], iph_air:[[7200]], i17e:[[5800],'single'], ip13m5:[[13000],'cell'], ip11m5:[[10500],['nostor','bundle']], ip11m4:[[8800],'cell'], ip11m2:[[6800],'cell'], ip112018:[[2600,3400],'nostor'], iair_m4_13:[[9500]], iair7_13:[[8000],'cell'], iair7_11:[[7600],'bundle'], i3t:[[400]], i17:[[7600,8000]], i13m:[[1900,2000,2200,2300],'lowbat'], i12m:[[],'defects'], i8p:[[],'defects'], i5t:[[900,950]], imini6:[[3500]], ip129g3:[[3300],'kbdmix'], ip129g4:[[4700]], ip129g5:[[7500]]
+};
+const noteText = m => { const n = NOTES[m.id] || [[]]; const o = []; if(n[0].length) o.push(t('Listings seen:') + ' ' + n[0].map(fmt).join(', ') + ' MAD.'); [].concat(n[1] || []).forEach(k => o.push(t(FLAGS[k]))); return o.join(' '); };
+
+/* labels (same keys as cfg groups) */
+const LBL_EN = {
+ lock:{official:'iCloud off, official and unlocked',esim:'Official, eSIM-only (US model)',turbo:'Needs a Turbo SIM',carrier:'Carrier locked',bypass:'Bypass (Wi-Fi or iCloud)',mdm:'MDM locked',icloud:'iCloud locked'},
+ batType:{orig:'Original battery',apple:'Replaced, Apple genuine',after:'Replaced, aftermarket'},
+ face:{ok:'Face ID works',bad:'Face ID not working'},
+ touch:{ok:'Touch ID works',bad:'Touch ID not working'},
+ screenOrigin:{orig:'Original screen',apple:'Replaced, Apple genuine',after:'Replaced, aftermarket (60 Hz or lower quality)'},
+ screenCond:{clean:'No marks',light:'Light scratches',deep:'Deep scratches',crack:'Cracked, still works',crackTouch:'Cracked, touch problems',lines:'Lines, dead pixels or burn-in'},
+ backGlass:{ok:'Back glass intact',chips:'Chips or hairline marks',crack:'Cracked',lens:'Cracked, camera lens also broken'},
+ backMetal:{ok:'Back straight',dents:'Light dents',bent:'Bent'},
+ body:{clean:'Clean',scuffs:'Light scuffs',dents:'Visible dents or scratches',heavy:'Heavy dents or bent frame'},
+ funcs:{camera:'Camera broken, blurry or lens cracked',flash:'Flash or torch not working',audio:'Speaker, mic or earpiece fault',charging:'Charging port fault',wifi:'Wi-Fi or Bluetooth fault',cellular:'SIM or network not detected',buttons:'A button does not work',water:'Water damage history',repaired:'Board repair or opened by a third party'},
+ warranty:{none:'No warranty',short:'Shop warranty, 1 to 3 months',long:'Shop warranty, 6 to 12 months',apple:'Apple warranty still running'},
+ acc:{box:'Original box',charger:'Original charger and cable',case:'Case or screen protector',pencil:'Apple Pencil',keyboard:'Keyboard folio'}
+};
+let LBL = LBL_EN;
+const GL_EN = {lock:'Lock status (share of the price kept)',batType:'Battery origin',face:'Face ID',touch:'Touch ID',screenOrigin:'Screen origin',screenCond:'Screen condition',backGlass:'Back glass (iPhone)',backMetal:'Back (metal)',body:'Frame and body',funcs:'Faults',warranty:'Warranty (adds to price)',acc:'Extras (flat MAD)'};
+let GL = GL_EN;
+const LOCKHINT_EN = {
+ official:'No change.',
+ esim:'Assumed 94%. eSIM-only phones are harder to sell locally.',
+ turbo:'Assumed 85%. The phone only works with an add-on SIM adapter.',
+ carrier:'Assumed 75%. It only works on one network until unlocked.',
+ bypass:'Kept at 60%. Taken from the listings: bypassed units sat roughly 20 to 55% under comparable ones (about 40% on average). A bypass can break after an update, and the device may be stolen.',
+ mdm:'Set to 80%. Five listings with MDM asked 65% to 99% of comparable ones that did not state a lock. A company or school profile controls the device and may lock it again.',
+ icloud:'Set to 35%. Locked iPhones were asked at 35% to 46% of comparable clean ones. Those are asking prices of unsold devices, and the device cannot be activated until it is bypassed.'
+};
+let LOCKHINT = LOCKHINT_EN;
+const DEF = {
+ perDoubling:7, cellular:12, maxDeduct:75, floorPct:5, rangePct:7,
+ battery:[[100,3],[90,0],[80,-5],[70,-11],[60,-17],[50,-23],[40,-30]],
+ lock:{official:100,esim:94,turbo:85,carrier:75,bypass:60,mdm:80,icloud:35},
+ batType:{orig:0,apple:-1,after:-4},
+ face:{ok:0,bad:-25}, touch:{ok:0,bad:-15},
+ screenOrigin:{orig:0,apple:-3,after:-12},
+ screenCond:{clean:0,light:-2,deep:-6,crack:-20,crackTouch:-35,lines:-25},
+ backGlass:{ok:0,chips:-2,crack:-8,lens:-15},
+ backMetal:{ok:0,dents:-3,bent:-12},
+ body:{clean:0,scuffs:-2,dents:-6,heavy:-14},
+ funcs:{camera:-12,flash:-2,audio:-5,charging:-6,wifi:-10,cellular:-15,buttons:-4,water:-20,repaired:-15},
+ warranty:{none:0,short:2,long:5,apple:8},
+ acc:{box:50,charger:60,case:40,pencil:300,keyboard:600}
+};
+const clone = o => JSON.parse(JSON.stringify(o));
+function loadCfg(){
+  const d = clone(DEF);
+  try{
+    const s = JSON.parse(localStorage.getItem('used-apple-cfg') || 'null');
+    if(s) for(const k in d){
+      if(s[k] === undefined) continue;
+      if(Array.isArray(d[k])) d[k] = s[k];
+      else if(typeof d[k] === 'object') Object.assign(d[k], s[k]);
+      else d[k] = s[k];
+    }
+  }catch(e){}
+  return d;
+}
+function saveCfg(){ try{ localStorage.setItem('used-apple-cfg', JSON.stringify(cfg)); }catch(e){} }
+let cfg = loadCfg();
+
+/* ---------- state ---------- */
+const INITIAL = () => ({type:'phone', model:'i14pm', storage:256, conn:'wifi', base:null, lock:'official', battery:85, batUnknown:false,
+  owner:false, batType:'orig', bio:'ok', screenOrigin:'orig', screenCond:'clean', back:'ok', body:'clean', funcs:{}, warranty:'none', acc:{}, ask:''});
+let S = INITIAL();
+const $ = id => document.getElementById(id);
+const model = () => MODELS.find(m => m.id === S.model);
+
+/* ---------- calculation ---------- */
+function batAdj(b){
+  const pts = cfg.battery.map(p => [Number(p[0]), Number(p[1])]).sort((a,c) => c[0] - a[0]);
+  if(b >= pts[0][0]) return pts[0][1];
+  for(let i = 0; i < pts.length - 1; i++){
+    if(b >= pts[i+1][0]){
+      const [x1,y1] = pts[i], [x2,y2] = pts[i+1];
+      return y2 + (y1 - y2) * (b - x2) / (x1 - x2);
+    }
+  }
+  return pts[pts.length-1][1];
+}
+function compute(){
+  const m = model();
+  const base = Math.max(0, Number(S.base) || 0);
+  const lines = [];
+  const bio = m.bio === 'face' ? 'face' : 'touch';
+
+  const baseMad = Math.round(base);
+  lines.push({k:'base', l:t('Base price, {x}', {x: t(m.name) + (m.custom ? '' : ' ' + gbLabel(m.baseGB))}), a:baseMad});
+  let A = baseMad;
+
+  if(!m.custom && S.storage && S.storage !== m.baseGB){
+    const f = Math.max(0.6, 1 + (cfg.perDoubling/100) * Math.log2(S.storage / m.baseGB));
+    const d = Math.round(base * f) - baseMad;
+    lines.push({l:t('Storage {x}', {x:gbLabel(S.storage)}), p:(f-1)*100, a:d});
+    A += d;
+  }
+  if(m.type === 'tablet' && S.conn === 'cell'){
+    const d = Math.round(A * cfg.cellular/100);
+    lines.push({l:t('Wi-Fi + Cellular'), p:cfg.cellular, a:d});
+    A += d;
+  }
+  lines.push({k:'sub', l:t('Clean, unlocked, working'), a:A});
+
+  // condition: additive percentages of A
+  const cond = [];
+  const add = (l, p) => { if(Math.abs(p) > 0.0001) cond.push({l, p}); };
+  const bval = S.batUnknown ? 85 : S.battery;
+  add(S.batUnknown ? t('Battery assumed 85% (not stated)') : t('Battery {n}%', {n:S.battery}), batAdj(bval));
+  add(t('Battery: {x}', {x:lf(LBL.batType[S.batType])}), cfg.batType[S.batType]);
+  if(m.bio !== 'none' && S.bio === 'bad') add(t(bio === 'face' ? 'Face ID not working' : 'Touch ID not working'), cfg[bio].bad);
+  add(t(S.screenOrigin === 'apple' ? 'Screen replaced, Apple genuine' : 'Screen replaced, aftermarket'), cfg.screenOrigin[S.screenOrigin]);
+  add(t('Screen: {x}', {x:lf(LBL.screenCond[S.screenCond])}), cfg.screenCond[S.screenCond]);
+  const bg = m.back === 'glass' ? 'backGlass' : 'backMetal';
+  add(t('Back: {x}', {x:lf(LBL[bg][S.back])}), cfg[bg][S.back]);
+  add(t('Body: {x}', {x:lf(LBL.body[S.body])}), cfg.body[S.body]);
+  for(const k in S.funcs) if(S.funcs[k] && funcVisible(k)) add(LBL.funcs[k], cfg.funcs[k]);
+  add(LBL.warranty[S.warranty], cfg.warranty[S.warranty]);
+
+  let raw = cond.reduce((s,c) => s + c.p, 0);
+  const clamped = Math.min(Math.max(raw, -cfg.maxDeduct), 15);
+  let B = A;
+  cond.forEach(c => { c.a = Math.round(A * c.p/100); B += c.a; lines.push(c); });
+  if(clamped !== raw){
+    const d = Math.round(A * (clamped - raw)/100);
+    lines.push({l:t('Cap on combined deductions ({n}%)', {n:cfg.maxDeduct}), a:d, p:clamped - raw}); B += d;
+  }
+  if(cond.length || clamped !== raw) lines.push({k:'sub', l:t('After condition'), a:B});
+
+  let C = B;
+  const lm = cfg.lock[S.lock];
+  if(S.lock !== 'official'){
+    const d = Math.round(B * (lm/100 - 1));
+    lines.push({l:t('Lock: {x} (keeps {n}%)', {x:lf(LBL.lock[S.lock]), n:lm}), a:d, p:lm - 100}); C += d;
+  }
+  for(const k in S.acc) if(S.acc[k] && accVisible(k)){
+    lines.push({l:LBL.acc[k], a:cfg.acc[k]}); C += cfg.acc[k];
+  }
+  const floor = Math.round(A * cfg.floorPct/100);
+  if(C < floor){
+    lines.push({l:t('Minimum, parts value ({n}% of clean price)', {n:cfg.floorPct}), a:floor - C}); C = floor;
+  }
+  lines.push({k:'tot', l:t('Calculated total'), a:C});
+  const step = C >= 1000 ? 50 : 10;
+  const headline = Math.max(0, Math.round(C / step) * step);
+  const r = cfg.rangePct/100;
+  const lo = Math.round(headline*(1-r)/step)*step, hi = Math.round(headline*(1+r)/step)*step;
+  return {lines, total:C, headline, lo, hi, step};
+}
+
+/* ---------- form building ---------- */
+const funcVisible = k => {
+  const m = model();
+  if(k === 'flash') return m.type === 'phone';
+  if(k === 'cellular') return m.type === 'phone' || S.conn === 'cell';
+  return true;
+};
+const accVisible = k => (k === 'pencil' || k === 'keyboard') ? model().type === 'tablet' : true;
+const lockKeys = () => model().type === 'phone' ? ['official','bypass','icloud','mdm','carrier','esim','turbo'] : ['official','bypass','icloud','mdm'];
+const OWN = "The previous owner is known and can be reached (from the seller’s sheet or the device record)", LB = {"gT":"Green: this lock can likely be bypassed","gP":"The chip is A11 or older, so bypass offers are more plausible. A bypass is not Apple’s unlock and can fail after a restore or update.","g2T":"Green, with conditions: bypass offers are reported","g2P":"It depends on the iOS version, is often Wi-Fi only (no SIM or calls), and a restore or update can bring the lock back. Ask for proof first.","rT":"Red: no bypass found for this model","rP":"No bypass offer is reported for this chip. Treat the device as parts only unless the owner removes the lock.","rcT":"Red: bypass cannot be assumed","rcP":"Custom device: bypass is unknown. Treat it as parts only unless the owner removes the lock.","yT":"Yellow: the previous owner may remove the lock","yP":"If the previous owner can be reached, they can remove the device from their Apple account, even if they forgot they sold it. Ask the seller for proof of the sale and the owner’s contact, and do not pay until the lock is removed."};
+function updateLockBox(){
+  const on = S.lock === 'icloud', m = model();
+  const ow = $('ownerWrap'), bx = $('lockBox');
+  ow.hidden = !on; bx.hidden = !on;
+  if(!on) return;
+  $('ownerTxt').textContent = t(OWN);
+  $('ownerChk').checked = !!S.owner;
+  let c, k;
+  if(S.owner){ c = 'yellow'; k = 'y'; }
+  else if(m.custom){ c = 'red'; k = 'rc'; }
+  else if(OLDCHIP.has(m.id)){ c = 'green'; k = 'g'; }
+  else if(BYPASS_REPORTED.has(m.id)){ c = 'green'; k = 'g2'; }
+  else { c = 'red'; k = 'r'; }
+  bx.className = 'lockbox ' + c;
+  $('lockBoxT').textContent = t(LB[k + 'T']);
+  $('lockBoxP').textContent = t(LB[k + 'P']);
+}
+function updateLockNotes(){
+  updateLockBox();
+  $('lockHint').textContent = LOCKHINT[S.lock];
+  const risky = S.lock === 'bypass' || S.lock === 'icloud';
+  const m = model();
+  const bh = $('bypassHint'), lw = $('lockWarn');
+  bh.hidden = !risky || !!m.custom;
+  bh.textContent = t(OLDCHIP.has(m.id) ? BYPASS_OLD : BYPASS_REPORTED.has(m.id) ? BYPASS_NEW : BYPASS_NONE);
+  lw.hidden = !risky;
+  lw.textContent = t(LOCK_WARN);
+}
+
+function optHtml(group, sel){
+  return Object.keys(LBL[group]).map(k => {
+    const v = cfg[group][k];
+    const t = v !== 0 ? ' (' + (v > 0 ? '+' : '−') + Math.abs(v) + '%)' : '';
+    return '<option value="' + k + '"' + (k === sel ? ' selected' : '') + '>' + LBL[group][k] + t + '</option>';
+  }).join('');
+}
+function pill(type, name, value, label, checked, extra){
+  return '<label class="pill' + (type === 'checkbox' ? ' chk' : '') + '"><input type="' + type + '" name="' + name + '" value="' + value + '"' + (checked ? ' checked' : '') + '><span>' + label + (extra || '') + '</span></label>';
+}
+const pctTxt = v => '<span class="pct">' + (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v) + '%</span>';
+
+function buildStatic(){
+  $('typePills').innerHTML = pill('radio','type','phone','iPhone',S.type==='phone') + pill('radio','type','tablet','iPad',S.type==='tablet');
+  $('batType').innerHTML = optHtml('batType', S.batType);
+  $('screenOrigin').innerHTML = optHtml('screenOrigin', S.screenOrigin);
+  $('screenCond').innerHTML = optHtml('screenCond', S.screenCond);
+  $('body').innerHTML = optHtml('body', S.body);
+  $('warranty').innerHTML = optHtml('warranty', S.warranty);
+  $('batFlags').innerHTML = pill('checkbox','batUnknown','1',t('Not stated'),S.batUnknown);
+  buildModelSelect();
+  buildDevice();
+}
+function buildModelSelect(){
+  const list = MODELS.filter(m => m.type === S.type);
+  $('model').innerHTML = list.map(m => '<option value="' + m.id + '"' + (m.id === S.model ? ' selected' : '') + '>' + t(m.name) + '</option>').join('');
+}
+function buildDevice(){
+  const m = model();
+  $('storBox').hidden = !!m.custom;
+  if(!m.custom) $('storage').innerHTML = '<option value="0"' + (!S.storage ? ' selected' : '') + '>' + t('Not known (base size assumed)') + '</option>' + m.st.map(g => '<option value="' + g + '"' + (g === S.storage ? ' selected' : '') + '>' + gbLabel(g) + (g === m.baseGB ? ' ' + t('(base)') : '') + '</option>').join('');
+  $('connBox').hidden = m.type !== 'tablet';
+  $('connPills').innerHTML = pill('radio','conn','wifi',t('Wi-Fi'),S.conn==='wifi') + pill('radio','conn','cell',t('Wi-Fi + Cellular') + ' ' + pctTxt(cfg.cellular),S.conn==='cell');
+  $('baseHint').textContent = m.custom ? t('Type the price of this exact model in perfect condition. Storage is not scaled.') : t('Filled in from the listings for {gb} in clean condition. Overwrite it with the price you think this model sells for when clean, such as what the seller or similar listings ask. Defects are subtracted below.', {gb:gbLabel(m.baseGB)});
+  if(S.base === null) S.base = m.base;
+  $('base').value = S.base;
+  $('baseTag').textContent = '';
+  $('srcNote').innerHTML = '<span class="chip ' + m.src + '"><i></i>' + t(SRC[m.src]) + '</span> &nbsp;' + noteText(m);
+
+  if(!lockKeys().includes(S.lock)) S.lock = 'official';
+  $('lockPills').innerHTML = lockKeys().map(k => pill('radio','lock',k,LBL.lock[k] + (k !== 'official' ? pctTxt(cfg.lock[k] - 100) : ''), S.lock === k)).join('');
+  updateLockNotes();
+
+  const bio = m.bio === 'face' ? 'face' : 'touch';
+  $('bioBox').hidden = m.bio === 'none';
+  if(m.bio === 'none') S.bio = 'ok';
+  $('bioBox').innerHTML = '<label for="bio">' + t(bio === 'face' ? 'Face ID' : 'Touch ID') + '</label><select id="bio" name="bio">' + optHtml(bio, S.bio) + '</select>';
+
+  const bg = m.back === 'glass' ? 'backGlass' : 'backMetal';
+  if(!(S.back in LBL[bg])) S.back = 'ok';
+  $('backBox').innerHTML = '<label for="back">' + t(m.back === 'glass' ? 'Back glass' : 'Back and frame') + '</label><select id="back" name="back">' + optHtml(bg, S.back) + '</select>';
+
+  $('funcBox').innerHTML = Object.keys(LBL.funcs).filter(funcVisible).map(k => pill('checkbox','func',k,LBL.funcs[k] + pctTxt(cfg.funcs[k]), !!S.funcs[k])).join('');
+  $('accBox').innerHTML = Object.keys(LBL.acc).filter(accVisible).map(k => pill('checkbox','acc',k,LBL.acc[k] + '<span class="pct">+' + cfg.acc[k] + '</span>', !!S.acc[k])).join('');
+}
+
+/* ---------- render result ---------- */
+function render(){
+  const m = model();
+  const r = compute();
+  const edited = Number(S.base) !== m.base;
+  $('baseTag').textContent = edited ? t('edited, suggested {n}', {n:fmt(m.base)}) : t('suggested');
+  $('baseReset').hidden = !edited;
+  $('big').innerHTML = fmt(r.headline) + '<small>MAD</small>';
+  $('dockPrice').textContent = fmt(r.headline) + ' MAD';
+  $('rangeOut').textContent = t('Fair range {lo} to {hi} MAD', {lo:fmt(r.lo), hi:fmt(r.hi)});
+  $('batOut').textContent = S.batUnknown ? t('not stated (85% assumed)') : S.battery + '%';
+  $('chipRow').innerHTML = '<span class="chip ' + m.src + '"><i></i>' + t(SRC[m.src]) + '</span>' + (S.lock !== 'official' ? '<span class="chip"><i style="background:var(--neg)"></i>' + LBL.lock[S.lock] + '</span>' : '') + (!m.custom && !S.storage ? '<span class="chip"><i style="background:var(--warn)"></i>' + t('Storage not known') + '</span>' : '');
+  $('lines').innerHTML = r.lines.map(x => {
+    const cls = x.k ? ' class="' + x.k + '"' : '';
+    const neg = x.k ? '' : (x.a < 0 ? ' neg' : x.a > 0 && x.k !== 'base' ? ' pos' : '');
+    const amt = (x.k === 'base' || x.k === 'sub' || x.k === 'tot') ? fmt(x.a) : sgn(x.a);
+    const pct = (x.p !== undefined && !x.k) ? '<span class="p">' + (x.p > 0 ? '+' : '−') + Math.abs(Math.round(x.p * 10)/10) + '%</span>' : '';
+    return '<li' + cls + '><span class="l">' + x.l + pct + '</span><span class="d"></span><span class="a' + neg + '">' + amt + '</span></li>';
+  }).join('');
+  const ask = Number(S.ask);
+  const v = $('verdict');
+  if(ask > 0 && r.headline > 0){
+    const diff = (ask - r.headline) / r.headline * 100;
+    const lim = cfg.rangePct;
+    let cls = 'ok', msg = t('inside the fair range');
+    if(diff > lim){ cls = 'hi'; msg = t('above the estimate'); }
+    else if(diff < -lim){ cls = 'lo'; msg = t('below the estimate. Check why: a hidden fault, a lock or a typo'); }
+    v.className = 'verdict ' + cls; v.hidden = false;
+    v.innerHTML = '<b>' + (diff > 0 ? '+' : '−') + Math.abs(Math.round(diff)) + '%</b> (' + sgn(ask - r.headline) + ' MAD), ' + msg + '.';
+  } else v.hidden = true;
+  return r;
+}
+function summaryText(){
+  const m = model(), r = compute();
+  const parts = [t(m.name) + (m.custom ? '' : ' ' + (S.storage ? gbLabel(S.storage) : lf(t('Storage not known')))) + (m.type === 'tablet' ? (S.conn === 'cell' ? ', ' + t('Wi-Fi + Cellular') : ', Wi-Fi') : '')];
+  parts.push(t('Lock: {x}', {x:LBL.lock[S.lock]}));
+  parts.push(t('Battery: {a}, {b}', {a:(S.batUnknown ? t('not stated') : S.battery + '%'), b:lf(LBL.batType[S.batType])}));
+  if(m.bio !== 'none') parts.push(t(m.bio === 'face' ? 'Face ID: {x}' : 'Touch ID: {x}', {x:t(S.bio === 'ok' ? 'works' : 'not working')}));
+  parts.push(t('Screen: {a}, {b}', {a:lf(LBL.screenOrigin[S.screenOrigin]), b:lf(LBL.screenCond[S.screenCond])}));
+  const bg = m.back === 'glass' ? 'backGlass' : 'backMetal';
+  parts.push(t('Back: {a}; body: {b}', {a:lf(LBL[bg][S.back]), b:lf(LBL.body[S.body])}));
+  const f = Object.keys(S.funcs).filter(k => S.funcs[k] && funcVisible(k)).map(k => LBL.funcs[k]);
+  if(f.length) parts.push(t('Faults: {x}', {x:f.join(', ')}));
+  parts.push(t('Estimate: {a} MAD (range {lo} to {hi})', {a:fmt(r.headline), lo:fmt(r.lo), hi:fmt(r.hi)}));
+  return parts.join('\n');
+}
+
+/* ---------- events ---------- */
+function setModel(id){
+  S.model = id; const m = model();
+  S.storage = m.custom ? 0 : m.baseGB; S.base = m.base; S.conn = 'wifi'; S.back = 'ok';
+  S.funcs = {}; S.acc = {}; S.bio = 'ok';
+  buildDevice(); render();
+}
+document.addEventListener('input', e => {
+  const t = e.target, n = t.name || t.id;
+  if(t.closest('#setHost')) return;
+  if(n === 'type'){ S.type = t.value; const first = MODELS.find(m => m.type === S.type); buildModelSelect(); setModel(first.id); $('model').value = first.id; return; }
+  if(n === 'model'){ setModel(t.value); return; }
+  if(n === 'storage'){ S.storage = Number(t.value); }
+  else if(n === 'conn'){ S.conn = t.value; if(S.conn === 'wifi') S.funcs.cellular = false; buildDevice(); }
+  else if(n === 'base'){ S.base = t.value; }
+  else if(n === 'lock'){ S.lock = t.value; updateLockNotes(); }
+  else if(n === 'owner'){ S.owner = t.checked; updateLockBox(); }
+  else if(n === 'battery' || n === 'batnum'){
+    let v = Math.min(100, Math.max(40, Number(t.value) || 40));
+    S.battery = v; $('battery').value = v; if(n === 'battery') $('batnum').value = v; else if(t.value !== '') {}
+  }
+  else if(n === 'batUnknown'){ S.batUnknown = t.checked; }
+  else if(n === 'batType'){ S.batType = t.value; }
+  else if(n === 'bio'){ S.bio = t.value; }
+  else if(n === 'screenOrigin'){ S.screenOrigin = t.value; }
+  else if(n === 'screenCond'){ S.screenCond = t.value; }
+  else if(n === 'back'){ S.back = t.value; }
+  else if(n === 'body'){ S.body = t.value; }
+  else if(n === 'func'){ S.funcs[t.value] = t.checked; }
+  else if(n === 'acc'){ S.acc[t.value] = t.checked; }
+  else if(n === 'warranty'){ S.warranty = t.value; }
+  else if(n === 'ask'){ S.ask = t.value; }
+  else return;
+  render();
+});
+$('resetForm').addEventListener('click', () => { S = INITIAL(); S.base = null; buildStatic(); S.base = model().base; $('base').value = S.base; $('battery').value = 85; $('batnum').value = 85; $('ask').value = ''; render(); });
+$('baseReset').addEventListener('click', () => { S.base = model().base; $('base').value = S.base; render(); });
+$('copyBtn').addEventListener('click', () => {
+  const txt = summaryText(), box = $('copyBox');
+  const fallback = () => { box.value = txt; box.hidden = false; box.focus(); box.select(); };
+  try{
+    navigator.clipboard.writeText(txt).then(() => { $('copyBtn').textContent = t('Copied'); setTimeout(() => $('copyBtn').textContent = t('Copy summary'), 1600); }).catch(fallback);
+  }catch(e){ fallback(); }
+});
+$('dockBtn').addEventListener('click', () => $('result').scrollIntoView({behavior:'smooth', block:'start'}));
+
+/* ---------- settings panel ---------- */
+function buildSettings(){
+  const sl = (path, label, unit, val) => '<label class="sl"><span>' + label + '</span><span class="inp"><input type="number" step="1" data-path="' + path + '" value="' + val + '"><em>' + unit + '</em></span></label>';
+  let h = '<div class="sg"><h3>' + t('Global') + '</h3><div class="sgrid">' +
+    sl('perDoubling',t('Storage: price change per doubling'),'%',cfg.perDoubling) +
+    sl('cellular',t('iPad cellular surcharge'),'%',cfg.cellular) +
+    sl('maxDeduct',t('Cap on combined deductions'),'%',cfg.maxDeduct) +
+    sl('floorPct',t('Minimum price (share of clean price)'),'%',cfg.floorPct) +
+    sl('rangePct',t('Fair range around the estimate'),'%',cfg.rangePct) + '</div></div>';
+  h += '<div class="sg"><h3>' + t('Battery curve (adjustment at each health level)') + '</h3><div class="sgrid">' +
+    cfg.battery.map((p,i) => sl('battery.' + i + '.1', t('At {n}% health', {n:p[0]}), '%', p[1])).join('') + '</div></div>';
+  for(const g of Object.keys(LBL)){
+    const unit = g === 'acc' ? 'MAD' : '%';
+    h += '<div class="sg"><h3>' + GL[g] + '</h3><div class="sgrid">' + Object.keys(LBL[g]).map(k => sl(g + '.' + k, LBL[g][k], unit, cfg[g][k])).join('') + '</div></div>';
+  }
+  $('setHost').innerHTML = h;
+}
+$('setHost').addEventListener('input', e => {
+  const t = e.target; if(!t.dataset.path) return;
+  const v = parseFloat(t.value); if(Number.isNaN(v)) return;
+  const path = t.dataset.path.split('.');
+  let o = cfg; for(let i = 0; i < path.length - 1; i++) o = o[path[i]];
+  o[path[path.length-1]] = v;
+  saveCfg();
+  const keep = {...S};
+  buildStatic(); $('base').value = S.base; render();
+});
+$('resetCfg').addEventListener('click', () => { cfg = clone(DEF); saveCfg(); buildSettings(); buildStatic(); $('base').value = S.base; render(); });
+
+/* ---------- theme ---------- */
+function applyTheme(mode){
+  const root = document.documentElement;
+  if(mode === 'light' || mode === 'dark') root.setAttribute('data-theme', mode); else root.removeAttribute('data-theme');
+  document.querySelectorAll('.theme button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.mode === (mode === 'light' || mode === 'dark' ? mode : 'system'))));
+}
+document.querySelector('.theme').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  applyTheme(b.dataset.mode);
+  try{ localStorage.setItem('used-apple-theme', b.dataset.mode); }catch(err){}
+});
+try{ applyTheme(localStorage.getItem('used-apple-theme') || 'system'); }catch(e){}
+
+/* ---------- language ---------- */
+const STATIC = [], ATTRS = [];
+(function(){
+  const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  let n;
+  while((n = w.nextNode())){
+    if(n.parentElement && n.parentElement.closest('script,style')) continue;
+    const m = n.nodeValue.match(/^(\s*)([\s\S]*?)(\s*)$/);
+    if(m[2]) STATIC.push({n:n, o:m[2].replace(/\s+/g,' '), lead:m[1], trail:m[3]});
+  }
+  document.querySelectorAll('[aria-label],[placeholder]').forEach(el => ['aria-label','placeholder'].forEach(a => { if(el.hasAttribute(a)) ATTRS.push({el:el, a:a, o:el.getAttribute(a)}); }));
+})();
+function applyLang(l){
+  LANG = l;
+  const root = document.documentElement;
+  root.lang = l; root.dir = l === 'ar' ? 'rtl' : 'ltr';
+  LBL = mapT(LBL_EN); GL = mapT(GL_EN); LOCKHINT = mapT(LOCKHINT_EN);
+  STATIC.forEach(x => { x.n.nodeValue = x.lead + t(x.o) + x.trail; });
+  ATTRS.forEach(x => x.el.setAttribute(x.a, t(x.o)));
+  document.querySelectorAll('.lang button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.lang === l)));
+  buildStatic(); buildSettings(); render();
+}
+document.querySelector('.lang').addEventListener('click', e => {
+  const b = e.target.closest('button'); if(!b) return;
+  applyLang(b.dataset.lang);
+  try{ localStorage.setItem('used-apple-lang', b.dataset.lang); }catch(err){}
+});
+let initLang = '';
+try{ initLang = localStorage.getItem('used-apple-lang') || ''; }catch(e){}
+if(!initLang){ const nl = (navigator.language || 'en').slice(0,2).toLowerCase(); initLang = (nl === 'fr' || nl === 'ar') ? nl : 'en'; }
+
+/* ---------- start ---------- */
+applyLang(initLang);
+</script>
+
+<script>
+/* ---------- Android app shell ---------- */
+(function(){
+  const app = window.AndroidApp;   // Java bridge, absent in a normal browser
+  const copyBtn = $('copyBtn'), shareBtn = $('shareBtn');
+
+  // Copy and Share go through Android: the WebView clipboard API is unreliable on file:// pages
+  if(app){
+    shareBtn.hidden = false;
+    copyBtn.addEventListener('click', e => {
+      e.stopImmediatePropagation();
+      app.copy(summaryText());
+      copyBtn.textContent = t('Copied');
+      setTimeout(() => copyBtn.textContent = t('Copy summary'), 1600);
+    }, true);
+    shareBtn.addEventListener('click', () => app.share(summaryText()));
+  } else if(navigator.share){
+    // web version on a phone: use the browser's own share sheet
+    shareBtn.hidden = false;
+    shareBtn.addEventListener('click', () => navigator.share({text:summaryText()}).catch(() => {}));
+  }
+
+  // Hide the floating price bar while the receipt itself is on screen
+  const dock = $('dock');
+  if('IntersectionObserver' in window){
+    new IntersectionObserver(es => es.forEach(x => dock.classList.toggle('away', x.isIntersecting)), {threshold:0.15}).observe($('result'));
+  }
+
+  // Match the Android status and navigation bars to the page background
+  function syncBars(){
+    if(!app || !app.setBars) return;
+    const cs = getComputedStyle(document.documentElement);
+    app.setBars(cs.getPropertyValue('--bg').trim(), cs.colorScheme.indexOf('dark') !== -1);
+  }
+  new MutationObserver(syncBars).observe(document.documentElement, {attributes:true, attributeFilter:['data-theme']});
+  try{ matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncBars); }catch(e){}
+  syncBars();
+
+  // Android back button: close the open panel first, then let the app exit
+  window.appBack = function(){
+    const set = $('settings');
+    if(set.open){ set.open = false; set.scrollIntoView({block:'nearest'}); return true; }
+    if(!$('copyBox').hidden){ $('copyBox').hidden = true; return true; }
+    return false;
+  };
+})();
+
+</script>
+<script src="config.js"></script>
+<script>
+/* ---------- consent, deals, uploads and price updates ---------- */
+(function(){
+  const CFG = window.APP_CONFIG || {};
+  const BUILD = window.APP_BUILD || {code:0, name:''};
+  const API = (CFG.supabaseUrl || '').replace(/\/+$/, '');
+  const QUESTIONS = [
+    ['asks', 'Share the prices I check', 'When you type a seller\'s asking price, that price and the device details are sent anonymously to improve the estimates.'],
+    ['deals', 'Share my purchases and sales', 'When you record a purchase or sale, its final price and the device details are sent anonymously. Real deal prices are the most useful data.'],
+    ['remind', 'Ask me later if I made the deal', 'When you reopen the app, it can ask whether you bought or sold a device you checked, and for how much.'],
+    ['updates', 'Download price updates', 'When online, the app checks for a newer price list. Nothing about you is sent.'],
+    ['personal', 'Adjust estimates to my own deals', 'The app compares your recorded deals with its estimates and adjusts future estimates for you. This stays on this phone.']
+  ];
+  const DAY = 864e5;
+
+  /* storage: every read and write is guarded, the page must work without it */
+  const get = (k, d) => { try{ const v = localStorage.getItem('ua-' + k); return v === null ? d : JSON.parse(v); }catch(e){ return d; } };
+  const put = (k, v) => { try{ localStorage.setItem('ua-' + k, JSON.stringify(v)); }catch(e){} };
+  const uuid = () => {
+    if(window.crypto && crypto.randomUUID) return crypto.randomUUID();
+    const b = crypto.getRandomValues(new Uint8Array(16)); b[6] = b[6] & 15 | 64; b[8] = b[8] & 63 | 128;
+    const h = [...b].map(x => x.toString(16).padStart(2, '0')).join('');
+    return h.slice(0,8) + '-' + h.slice(8,12) + '-' + h.slice(12,16) + '-' + h.slice(16,20) + '-' + h.slice(20);
+  };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+
+  let consent = get('consent', null);
+  let installId = get('install', null);
+  if(!installId){ installId = uuid(); put('install', installId); }
+  const on = k => !!(consent && consent[k]);
+
+  /* ---------- price file ---------- */
+  const BUILTIN = {}; MODELS.forEach(m => BUILTIN[m.id] = m.base);
+  const pricesVersion = () => (get('prices', null) || {}).version || 1;
+  function applyPrices(p){
+    MODELS.forEach(m => { const b = p && p.base && Number(p.base[m.id]); if(!m.custom) m.base = b > 0 ? b : BUILTIN[m.id]; });
+  }
+  function refreshBase(prevDefault){
+    // only replace the base the user sees if they have not typed their own
+    if(Number(S.base) === prevDefault){ S.base = model().base; $('base').value = S.base; }
+    render();
+  }
+  async function checkPrices(manual){
+    if(!CFG.pricesUrl){ if(manual) note(t('No server is set up yet, so records stay on this phone.')); return; }
+    try{
+      const res = await fetch(CFG.pricesUrl + (CFG.pricesUrl.includes('?') ? '&' : '?') + 't=' + Date.now(), {cache:'no-store'});
+      const p = await res.json();
+      if(p && p.version > pricesVersion() && p.base){
+        const prev = model().base;
+        put('prices', p); applyPrices(p); refreshBase(prev);
+        note(t('Prices updated to version {v}.', {v:p.version}));
+      } else if(manual) note(t('Prices are up to date.'));
+    }catch(e){ if(manual) note(t('Could not reach the server. Try again when online.')); }
+    renderData();
+  }
+
+  /* ---------- newer APK notice (Android only; the web version is always current) ---------- */
+  let newer = null;
+  async function checkAppVersion(){
+    if(!window.AndroidApp || !CFG.versionUrl) return;
+    try{
+      const v = await (await fetch(CFG.versionUrl + '?t=' + Date.now(), {cache:'no-store'})).json();
+      if(v && v.versionCode > BUILD.code && v.apk && /^https:\/\//.test(v.apk)) newer = v;
+    }catch(e){}
+    renderUpdate();
+  }
+  function renderUpdate(){
+    const bar = $('updateBar');
+    if(!newer || get('upd-dismiss', 0) >= newer.versionCode){ bar.hidden = true; return; }
+    bar.hidden = false;
+    bar.innerHTML = '<span>' + esc(t('New version {v} is available.', {v:newer.versionName})) + '</span>' +
+      '<a class="btn pri" href="' + esc(newer.apk) + '">' + t('Download') + '</a>' +
+      '<button class="btn" type="button" id="updLater">' + t('Later') + '</button>';
+  }
+  $('updateBar').addEventListener('click', e => {
+    if(e.target.id === 'updLater'){ put('upd-dismiss', newer.versionCode); renderUpdate(); }
+  });
+
+  /* ---------- personal adjustment (learned from this phone's own deals) ---------- */
+  function personal(){
+    const d = get('deals', []).filter(x => x.estimate > 0 && x.price > 0);
+    if(!on('personal') || d.length < 2) return {f:1, n:d.length};
+    const mean = d.reduce((s, x) => s + x.price / x.estimate - 1, 0) / d.length;
+    const f = 1 + Math.max(-0.15, Math.min(0.15, mean * d.length / (d.length + 5)));   // shrink toward 1 while there are few deals
+    return {f, n:d.length};
+  }
+  const baseCompute = compute;
+  compute = function(){
+    const r = baseCompute();
+    r.raw = r.total; r.rawHeadline = r.headline;
+    const p = personal();
+    if(Math.abs(p.f - 1) < 0.005) return r;
+    const i = r.lines.findIndex(x => x.k === 'tot');
+    const d = Math.round(r.total * (p.f - 1));
+    r.lines.splice(i, 0, {l:t('Adjustment from your deals ({n})', {n:p.n}), a:d, p:(p.f - 1) * 100});
+    r.total += d; r.lines[i + 1].a = r.total;
+    r.step = r.total >= 1000 ? 50 : 10;
+    r.headline = Math.max(0, Math.round(r.total / r.step) * r.step);
+    const rr = cfg.rangePct / 100;
+    r.lo = Math.round(r.headline * (1 - rr) / r.step) * r.step; r.hi = Math.round(r.headline * (1 + rr) / r.step) * r.step;
+    return r;
+  };
+
+  /* ---------- records ---------- */
+  function snapshot(){
+    const m = model(), r = compute();
+    return {install_id:installId, model:m.id, storage:m.custom ? null : (S.storage || null), conn:m.type === 'tablet' ? S.conn : null,
+      lock:S.lock, battery:S.batUnknown ? null : S.battery, bat_type:S.batType, bio:m.bio === 'none' ? null : S.bio,
+      screen_origin:S.screenOrigin, screen_cond:S.screenCond, back:S.back, body:S.body,
+      faults:Object.keys(S.funcs).filter(k => S.funcs[k] && funcVisible(k)), warranty:S.warranty,
+      extras:Object.keys(S.acc).filter(k => S.acc[k] && accVisible(k)),
+      base_used:Math.round(Number(S.base) || 0), base_default:m.base, total:Math.round(r.raw), estimate:r.rawHeadline,
+      prices_version:pricesVersion(), app_version:BUILD.name + (window.AndroidApp ? '' : '-web'), lang:LANG};
+  }
+  const label = m => t(m.name) + (m.custom || !S.storage ? '' : ' ' + gbLabel(S.storage));
+  function enqueue(rec){
+    const q = get('queue', []); q.push(Object.assign({client_time:new Date().toISOString()}, rec)); put('queue', q.slice(-500));
+    return flush();
+  }
+  let running = null;   // the upload in progress; later callers wait for it, then send what is left
+  function headers(){
+    const h = {'Content-Type':'application/json', apikey:CFG.supabaseKey, Prefer:'return=minimal'};
+    if(/^eyJ/.test(CFG.supabaseKey)) h.Authorization = 'Bearer ' + CFG.supabaseKey;   // legacy anon keys are JWTs
+    return h;
+  }
+  function flush(){
+    if(!API || !CFG.supabaseKey || !navigator.onLine) return Promise.resolve(false);
+    if(running) return running.then(() => flush());
+    running = (async () => {
+      let q = get('queue', []);
+      try{
+        while(q.length){
+          const batch = q.slice(0, 50);
+          const res = await fetch(API + '/rest/v1/records', {method:'POST', headers:headers(), body:JSON.stringify(batch)});
+          // a rejected batch (bad value, daily limit) is dropped so it cannot block the queue forever
+          if(!res.ok && (res.status >= 500 || res.status === 429 || res.status === 408)) break;
+          q = get('queue', []).slice(batch.length); put('queue', q);
+          if(res.ok) put('sent', get('sent', 0) + batch.length);
+        }
+      }catch(e){}
+      return !get('queue', []).length;
+    })().finally(() => { running = null; renderData(); });
+    return running;
+  }
+
+  /* asking prices: one record per device and price, sent once the user has moved on */
+  let pending = null, askTouched = false, askTimer = 0;
+  $('ask').addEventListener('input', () => { askTouched = true; });
+  function commitAsk(){
+    clearTimeout(askTimer);
+    if(!pending) return;
+    const p = pending; pending = null; askTouched = false;
+    const checks = get('checks', []).filter(c => Date.now() - c.ts < 7 * DAY);
+    const dup = checks.find(c => c.key === p.key && Date.now() - c.ts < DAY);
+    if(dup){ dup.snap = p.snap; put('checks', checks); return; }
+    checks.push({key:p.key, ts:Date.now(), name:p.name, ask:p.ask, snap:p.snap, done:false});
+    put('checks', checks.slice(-30));
+    if(on('asks')) enqueue(Object.assign({}, p.snap, {kind:'ask', price:p.ask}));
+  }
+  function trackAsk(){
+    const ask = Number(S.ask);
+    if(pending && pending.snap.model !== S.model) commitAsk();
+    if(!(ask > 0)){ if(pending) commitAsk(); return; }
+    if(!askTouched || !(on('asks') || on('remind'))) return;
+    pending = {key:S.model + '|' + (S.storage || 0) + '|' + ask, ask, name:label(model()), snap:snapshot()};
+    clearTimeout(askTimer); askTimer = setTimeout(commitAsk, 20000);
+  }
+  document.addEventListener('visibilitychange', () => { if(document.hidden) commitAsk(); else flush(); });
+  window.addEventListener('pagehide', commitAsk);
+  window.addEventListener('online', () => flush());
+
+  /* deals */
+  async function saveDeal(kind, price, snap){
+    const d = get('deals', []);
+    d.push({kind, price, estimate:snap.estimate, model:snap.model, ts:Date.now()}); put('deals', d.slice(-200));
+    const checks = get('checks', []); checks.forEach(c => { if(c.snap.model === snap.model && !c.done) c.done = true; }); put('checks', checks);
+    let msg = t('Deal saved on this phone only.');
+    if(on('deals') && API){ msg = (await enqueue(Object.assign({}, snap, {kind, price}))) ? t('Deal saved and sent.') : t('Deal saved. It will be sent when you are online.'); }
+    render();
+    return msg;
+  }
+
+  /* ---------- UI pieces ---------- */
+  const yesNo = (name, val) => '<div class="pills yn">' + pill('radio', name, 'yes', t('Yes'), val === true) + pill('radio', name, 'no', t('No'), val === false) + '</div>';
+  const questionsHtml = (prefix, vals) => QUESTIONS.map(([k, q, d]) =>
+    '<div class="q"><b>' + t(q) + '</b><p class="hint">' + t(d) + '</p>' + yesNo(prefix + k, vals[k]) + '</div>').join('');
+  const langBtns = () => '<div class="lang" role="group">' + [['en','EN'],['fr','FR'],['ar','الدارجة']].map(([l, n]) =>
+    '<button type="button" data-lang="' + l + '" aria-pressed="' + (LANG === l) + '">' + n + '</button>').join('') + '</div>';
+
+  /* first launch */
+  let draft = {};
+  function renderOnboard(){
+    const box = $('onboard');
+    if(consent){ box.hidden = true; document.documentElement.classList.remove('locked'); return; }
+    box.hidden = false; document.documentElement.classList.add('locked');
+    const all = QUESTIONS.every(([k]) => typeof draft[k] === 'boolean');
+    box.innerHTML = '<div class="obin">' + langBtns() +
+      '<h1>' + t('Welcome') + '</h1><p class="lede">' + t('Before you start, choose what this app may do. You can change any answer later in Data sharing, at the bottom of the page.') + '</p>' +
+      questionsHtml('ob_', draft) +
+      '<p class="hint">' + t('Never collected: your name, phone number, contacts, location, photos or IMEI. Each install gets a random code so you can delete your data later.') + '</p>' +
+      '<button class="btn pri" id="obGo" type="button"' + (all ? '' : ' disabled') + '>' + t('Continue') + '</button>' +
+      (all ? '' : '<p class="hint">' + t('Answer each question to continue.') + '</p>') + '</div>';
+  }
+  $('onboard').addEventListener('click', e => {
+    const lb = e.target.closest('.lang button');
+    if(lb){ applyLang(lb.dataset.lang); try{ localStorage.setItem('used-apple-lang', lb.dataset.lang); }catch(err){} return; }
+    if(e.target.id === 'obGo'){
+      consent = Object.assign({}, draft, {at:new Date().toISOString()}); put('consent', consent);
+      renderAll(); flush(); if(on('updates')){ checkPrices(false); checkAppVersion(); }
+    }
+  });
+  $('onboard').addEventListener('change', e => {
+    const n = e.target.name || ''; if(!n.startsWith('ob_')) return;
+    draft[n.slice(3)] = e.target.value === 'yes'; renderOnboard();
+  });
+
+  /* deal box under the receipt */
+  function renderDeal(){
+    $('dealBox').innerHTML = '<p class="eyebrow">' + t('Record a deal') + '</p>' +
+      '<div class="pills">' + pill('radio', 'dealKind', 'bought', t('I bought it'), true) + pill('radio', 'dealKind', 'sold', t('I sold it'), false) + '</div>' +
+      '<label for="dealPrice" class="lab">' + t('Final price in MAD') + '</label>' +
+      '<div class="dealrow"><input type="number" id="dealPrice" min="0" step="50" inputmode="numeric"><button class="btn pri" id="dealSave" type="button">' + t('Save deal') + '</button></div>' +
+      '<p class="hint" id="dealMsg" role="status"></p>';
+  }
+  $('dealBox').addEventListener('click', async e => {
+    if(e.target.id !== 'dealSave') return;
+    const price = Number($('dealPrice').value), msg = $('dealMsg');
+    if(!(price > 0)){ msg.textContent = t('Type the final price first.'); return; }
+    const kind = (document.querySelector('input[name=dealKind]:checked') || {}).value || 'bought';
+    commitAsk();
+    msg.textContent = await saveDeal(kind, price, snapshot());
+    $('dealPrice').value = '';
+  });
+
+  /* "did you make the deal?" card on a later launch */
+  let promptDismissed = false;
+  function renderPrompt(){
+    const box = $('askPrompt');
+    const c = on('remind') && !promptDismissed && get('checks', []).find(x => !x.done && Date.now() - x.ts > 30 * 6e4 && Date.now() - x.ts < 7 * DAY);
+    if(!c){ box.hidden = true; return; }
+    box.hidden = false; box.dataset.key = c.key;
+    box.innerHTML = '<b>' + t('Did you make the deal?') + '</b><p class="hint">' + esc(t('You checked {x}, asked at {n} MAD.', {x:c.name, n:fmt(c.ask)})) + '</p>' +
+      '<div class="pills">' + pill('radio', 'pKind', 'bought', t('I bought it'), false) + pill('radio', 'pKind', 'sold', t('I sold it'), false) + '</div>' +
+      '<div class="dealrow" id="pRow" hidden><input type="number" id="pPrice" min="0" step="50" inputmode="numeric" value="' + c.ask + '" aria-label="' + t('Final price in MAD') + '"><button class="btn pri" id="pSave" type="button">' + t('Save deal') + '</button></div>' +
+      '<div class="btns"><button class="btn" id="pNo" type="button">' + t('No deal') + '</button><button class="btn" id="pLater" type="button">' + t('Later') + '</button></div>';
+  }
+  $('askPrompt').addEventListener('change', e => { if(e.target.name === 'pKind') $('pRow').hidden = false; });
+  $('askPrompt').addEventListener('click', async e => {
+    const id = e.target.id, key = $('askPrompt').dataset.key;
+    const checks = get('checks', []), c = checks.find(x => x.key === key);
+    if(!c) return;
+    if(id === 'pLater'){ promptDismissed = true; renderPrompt(); return; }
+    if(id === 'pNo'){ c.done = true; put('checks', checks); renderPrompt(); return; }
+    if(id === 'pSave'){
+      const price = Number($('pPrice').value); if(!(price > 0)) return;
+      const kind = (document.querySelector('input[name=pKind]:checked') || {}).value || 'bought';
+      c.done = true; put('checks', checks);
+      const msg = await saveDeal(kind, price, c.snap);
+      $('askPrompt').innerHTML = '<p class="hint">' + msg + '</p>';
+      setTimeout(renderPrompt, 2500);
+    }
+  });
+
+  /* Data sharing panel */
+  let lastNote = '';
+  function note(s){ lastNote = s; renderData(); }
+  function renderData(){
+    const body = $('dataBody'); if(!body) return;
+    const p = get('prices', null);
+    const q = get('queue', []).length, sent = get('sent', 0);
+    body.innerHTML = questionsHtml('ds_', consent || {}) +
+      '<div class="sg"><p class="hint">' + (p && p.version > 1 ? t('Price list version {v}, from {d}', {v:p.version, d:esc(p.date || '')}) : t('Built-in prices from 19 Oct 2026')) + '</p>' +
+      '<p class="hint">' + (API ? t('Waiting to send: {n}. Sent: {m}.', {n:q, m:sent}) : t('No server is set up yet, so records stay on this phone.')) + '</p>' +
+      '<p class="hint">' + t('Install code: {c}', {c:installId.slice(0, 8)}) + '</p>' +
+      (lastNote ? '<p class="hint" role="status"><b>' + lastNote + '</b></p>' : '') + '</div>' +
+      '<div class="btns"><button class="btn" id="dsSend" type="button">' + t('Send now') + '</button>' +
+      '<button class="btn" id="dsPrices" type="button">' + t('Check for new prices') + '</button>' +
+      '<button class="btn danger" id="dsDelete" type="button">' + t('Delete my data') + '</button></div>';
+  }
+  $('dataBody').addEventListener('change', e => {
+    const n = e.target.name || ''; if(!n.startsWith('ds_')) return;
+    consent = Object.assign({}, consent, {[n.slice(3)]: e.target.value === 'yes', at:new Date().toISOString()}); put('consent', consent);
+    render(); renderPrompt();
+  });
+  $('dataBody').addEventListener('click', async e => {
+    const id = e.target.id;
+    if(id === 'dsSend'){ commitAsk(); note((await flush()) ? t('Sent.') : t('Could not reach the server. Try again when online.')); }
+    else if(id === 'dsPrices') checkPrices(true);
+    else if(id === 'dsDelete'){
+      if(!confirm(t('Delete the data you shared from the server and this phone?'))) return;
+      if(API){
+        try{
+          const res = await fetch(API + '/rest/v1/rpc/delete_install', {method:'POST', headers:headers(), body:JSON.stringify({p_install:installId})});
+          if(!res.ok) throw new Error(res.status);
+        }catch(err){ note(t('Could not reach the server. Try again when online.')); return; }
+      }
+      ['queue', 'deals', 'checks', 'sent'].forEach(k => { try{ localStorage.removeItem('ua-' + k); }catch(err){} });
+      installId = uuid(); put('install', installId);
+      render(); note(t('Your data was deleted.'));
+    }
+  });
+
+  function renderAll(){ renderOnboard(); renderDeal(); renderPrompt(); renderData(); renderUpdate(); }
+
+  /* hooks into the page script */
+  const baseRender = render;
+  render = function(){
+    const r = baseRender();
+    const p = get('prices', null);
+    if(p && p.version > 1) $('chipRow').insertAdjacentHTML('beforeend', '<span class="chip"><i style="background:var(--accent)"></i>' + t('Prices updated {d}', {d:esc(p.date || 'v' + p.version)}) + '</span>');
+    trackAsk();
+    return r;
+  };
+  const baseApplyLang = applyLang;
+  applyLang = function(l){ baseApplyLang(l); renderAll(); };
+
+  /* start */
+  const cached = get('prices', null);
+  const prev = model().base;
+  if(cached) applyPrices(cached);
+  refreshBase(prev);
+  renderAll();
+  if(consent){ flush(); if(on('updates')){ checkPrices(false); checkAppVersion(); } }
+})();
+
+</script>
+<script>if('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});</script>
+</body>
+</html>

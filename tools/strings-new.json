@@ -46,5 +46,7 @@
  "Install code: {c}": ["Code d’installation : {c}", "الكود ديالك: {c}"],
  "Prices updated {d}": ["Prix mis à jour le {d}", "الأثمنة تجددو {d}"],
  "Sent.": ["Envoyé.", "تصيفط."],
- "Share": ["Partager", "شارك"]
+ "Share": ["Partager", "شارك"],
+ "New version {v} is available.": ["Nouvelle version {v} disponible.", "كاينة نسخة جديدة {v}."],
+ "Download": ["Télécharger", "تيليشارجي"]
 }
